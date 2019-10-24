@@ -365,3 +365,19 @@ GalElement* Gda::GetGalElement(GeoDaWeight* w)
     }
     return gal;
 }
+
+GalElement* Gda::NeighborMapToGal(std::vector<std::set<int> >& nbr_map)
+{
+	if (nbr_map.size() == 0) return 0;
+	GalElement* gal = new GalElement[nbr_map.size()];
+	if (!gal) return 0;
+	for (int i=0, iend=nbr_map.size(); i<iend; i++) {
+		gal[i].SetSizeNbrs(nbr_map[i].size());
+		long cnt = 0;
+		for (std::set<int>::iterator it=nbr_map[i].begin();
+			 it != nbr_map[i].end(); it++) {
+			gal[i].SetNbr(cnt++, *it);
+		}
+	}
+	return gal;
+}

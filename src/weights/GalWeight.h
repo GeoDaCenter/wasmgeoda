@@ -79,6 +79,7 @@ public:
 namespace Gda {
 	void MakeHigherOrdContiguity(size_t distance, size_t obs, GalElement* W, bool cummulative);
     GalElement* GetGalElement(GeoDaWeight* w);
+    GalElement* NeighborMapToGal(std::vector<std::set<int> >& nbr_map);
 }
 
 #endif
