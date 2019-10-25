@@ -1,7 +1,7 @@
 #ifndef __JSGEODA_CENTROID__
 #define __JSGEODA_CENTROID__
 
-#include <math.h>
+#include <cmath>
 #include "ttmath/ttmathbig.h"
 #include "ttmath/ttmathtypes.h"
 #include "../geofeature.h"
@@ -56,25 +56,15 @@ public:
         // The first element in the array represents the exterior ring. 
         // Any subsequent elements represent interior rings 
         addShell(poly);
-        int start = 0, end = poly->parts[0] - 1;
-        for(size_t i = 1; i < poly->num_parts; i++) {
-            start = end + 1;
-            end = end + poly->parts[i];
-            addHole(poly, start, end);
+
+        if (poly->num_parts > 1) {
+            for (size_t i = 1; i < poly->num_parts; ++i) {
+                int start = poly->parts[i];
+                int end = i+1 < poly->num_parts ? poly->parts[i+1] : poly->num_points;
+                addHole(poly, start, end-1);
+            }
         }
     }
-
-private:
-
-    gda::Point areaBasePt;
-    gda::Point triangleCent3;
-    gda::Point lineCentSum;
-    gda::Point ptCentSum;
-    gda::Point cg3;
-
-    double areasum2;
-    double totalLength;
-    int ptCount;
 
     bool getCentroid(gda::Point& cent) const
     {
@@ -96,6 +86,19 @@ private:
         }
         return true;
     }
+
+private:
+
+    gda::Point areaBasePt;
+    gda::Point triangleCent3;
+    gda::Point lineCentSum;
+    gda::Point ptCentSum;
+    gda::Point cg3;
+
+    double areasum2;
+    double totalLength;
+    int ptCount;
+
 
     void setAreaBasePoint(gda::Point& basePt)
     {
@@ -167,7 +170,8 @@ private:
 
     void addShell(gda::PolygonContents* poly)
     {
-        size_t len = poly->parts[0];
+        // ext ring
+        size_t len = poly->num_parts > 1 ? poly->parts[1] : poly->num_points;
         if(len > 0) {
             setAreaBasePoint(poly->points[0]);
         }
@@ -186,15 +190,13 @@ private:
         if (nPts < 3) return false;
 
         // find highest point
-        gda::Point& hiPt = pts[start];
+        const gda::Point* hiPt = &pts[start];
         size_t hiIndex = start;
 
         for(std::size_t i = start+1; i <= end; ++i) {
-            const gda::Point& p = pts[i];
-            if(p.y > hiPt.y) {
-                //hiPt = p;
-                hiPt.x = p.x;
-                hiPt.y = p.y;
+            const gda::Point* p = &pts[i];
+            if(p->y > hiPt->y) {
+                hiPt = p;
                 hiIndex = i;
             }
         }
@@ -206,17 +208,17 @@ private:
             }
             iPrev = iPrev - 1;
         }
-        while(pts[iPrev].x == hiPt.x && pts[iPrev].y == hiPt.y && iPrev != hiIndex);
+        while(pts[iPrev].equals(hiPt) && iPrev != hiIndex);
 
         // find distinct point after highest point
         auto iNext = hiIndex;
         do {
             iNext = (iNext + 1) % nPts;
         }
-        while(pts[iNext].x == hiPt.x && pts[iNext].y == hiPt.y && iNext != hiIndex);
+        while(pts[iNext].equals(hiPt) && iNext != hiIndex);
 
-        gda::Point* prev = &pts[iPrev];
-        gda::Point* next = &pts[iNext];
+        const gda::Point* prev = &pts[iPrev];
+        const gda::Point* next = &pts[iNext];
 
         /*
         * This check catches cases where the ring contains an A-B-A
@@ -225,6 +227,7 @@ private:
         * (including the case where the input array has fewer than 4 elements),
         * or it contains coincident line segments.
         */
+
         if(prev->equals(hiPt) || next->equals(hiPt) || prev->equals(next)) {
             return false;
             // MD - don't bother throwing exception,
@@ -232,7 +235,7 @@ private:
             //throw  IllegalArgumentException("degenerate ring (does not contain 3 distinct points)");
         }
 
-        int disc = orientationIndex(*prev, hiPt, *next);
+        int disc = orientationIndex(*prev, *hiPt, *next);
 
         /**
          *  If disc is exactly 0, lines are collinear.
@@ -258,7 +261,7 @@ private:
         return isCCW;
     }
 
-    int orientationIndex(gda::Point& p1, gda::Point& p2, gda::Point& q)
+    int orientationIndex(const gda::Point& p1, const gda::Point& p2, const gda::Point& q)
     {
         // fast filter for orientation index
         // avoids use of slow extended-precision arithmetic in many cases
@@ -280,7 +283,7 @@ private:
         return OrientationDD(d);
     }
 
-    int orientationIndexFilter(gda::Point& pa, gda::Point& pb, gda::Point& pc)
+    int orientationIndexFilter(const gda::Point& pa, const gda::Point& pb, const gda::Point& pc)
     {
         double detsum;
         double const detleft = (pa.x - pc.x) * (pb.y - pc.y);

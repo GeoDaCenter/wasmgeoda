@@ -21,15 +21,15 @@ namespace gda {
 		Point(double x_s, double y_s) : x(x_s), y(y_s) {}
 		double x;
 		double y;
-		bool equals(Point* p, double precision_threshold=0.0) {
+		bool equals(const Point* p, double precision_threshold=0.0) const {
 			return (abs(x - p->x) <= precision_threshold &&
 							abs(y - p->y) <= precision_threshold);
 		}
-		bool equals(Point& p, double precision_threshold=0.0) {
+		bool equals(const Point& p, double precision_threshold=0.0) const {
 			return (abs(x - p.x) <= precision_threshold &&
 							abs(y - p.y) <= precision_threshold);
 		}
-		double distance(Point& p) {
+		double distance(const Point& p) {
 			return sqrt( (x - p.x)*(x-p.x) + (y-p.y)*(y-p.y) );
 		}
 	};

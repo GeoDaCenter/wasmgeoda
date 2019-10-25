@@ -3,9 +3,10 @@
 #include <algorithm>
 #include <limits>
 
+#include "shape/centroid.h"
 #include "utils.h"
-#include "geojson.h"
 #include "gda_weights.h"
+#include "geojson.h"
 
 using error = std::runtime_error;
 
@@ -17,6 +18,7 @@ GdaGeojson::GdaGeojson()
 GdaGeojson::GdaGeojson(const std::string& file_path)
         : GdaGeojson()
 {
+#ifndef __JSGEODA__
     std::string filename = file_path.substr(file_path.find_last_of("/") + 1);
 
     FILE *fp;
@@ -43,6 +45,7 @@ GdaGeojson::GdaGeojson(const std::string& file_path)
 
     fclose(fp);
     free(buffer);
+#endif
 }
 
 GdaGeojson::GdaGeojson(const char* file_name, const char* in_content)
@@ -87,7 +90,12 @@ const std::vector<gda::Point>& GdaGeojson::GetCentroids()
                 this->centroids[i].y = pt->y;
             }
         } else if (this->main_map.shape_type == gda::POLYGON) {
-
+            this->centroids.resize(this->main_map.num_obs);
+            for (size_t i=0; i<this->centroids.size(); ++i) {
+                gda::PolygonContents* poly = (gda::PolygonContents*)this->main_map.records[i];
+                Centroid cent(poly);
+                cent.getCentroid(this->centroids[i]);
+            }
         }
     }
     return this->centroids;
@@ -156,8 +164,8 @@ void GdaGeojson::readFeatureCollection(const rapidjson::Value& features)
     */
     this->main_map.bbox_x_min = std::numeric_limits<double>::max();
     this->main_map.bbox_y_min = std::numeric_limits<double>::max();
-    this->main_map.bbox_x_max = std::numeric_limits<double>::min();
-    this->main_map.bbox_y_max = std::numeric_limits<double>::min();
+    this->main_map.bbox_x_max = std::numeric_limits<double>::lowest();
+    this->main_map.bbox_y_max = std::numeric_limits<double>::lowest();
     if (!features.IsArray()) 
         throw error("FeatureCollection is empty");
 
@@ -165,6 +173,7 @@ void GdaGeojson::readFeatureCollection(const rapidjson::Value& features)
     this->main_map.num_obs = fa.Size();
     for (size_t i=0; i<fa.Size(); ++i) {
         const rapidjson::Value &geom = fa[i]["geometry"];
+        //std::cout << fa[i]["properties"]["POLY_ID"].GetInt() <<std::endl;
         if (geom.IsNull()) {
             // null geometry
             this->main_map.records.push_back(new gda::NullShapeContents());
@@ -247,37 +256,95 @@ void GdaGeojson::addMultiPoints(const rapidjson::Value &coords)
 
 void GdaGeojson::addPolygon(const rapidjson::Value &coords) 
 {
-    // in some cases: geom.coordinates is [Array[24]] [ [[1,2],[3,4]] ]
+    // in some cases,
+    // [
+    //	[
+    //		[-80.874755859375,25.8012447357178],[-80.8742065429688,25.9828872680664],[-80.6838607788086,25.9843692779541],[-80.6811676025391,25.960147857666],
+    //		[-80.2978363037109,25.9572772979736],[-80.2978515625,25.9739627838135],[-80.1280136108398,25.9771671295166],[-80.1933288574219,25.7596549987793],
+    //	]
+    //]
+    // it could be multipolygon, e.g. NAT "POLY_ID": 1137, "NAME": "Frederick", "STATE_NAME": "Virginia",
+    // [
+    //	[
+    //		[-78.1545867919922,39.0405921936035],[-78.1680374145508,39.0219383239746],[-78.3112487792969,39.0107421875],[-78.3190536499023,39.021484375],[-78.3138656616211,39.0337600708008],
+    //		[-78.3382339477539,39.0413055419922],[-78.3365478515625,39.0490188598633],[-78.3490600585938,39.0552787780762],[-78.3275451660156,39.0907821655273],[-78.3442840576172,39.1029052734375],
+    //		[-78.354248046875,39.093318939209],[-78.3922805786133,39.1003036499023],[-78.3968505859375,39.0866737365723],[-78.4345550537109,39.0682640075684],[-78.4559478759766,39.027759552002],
+    //		[-78.5369186401367,39.0570259094238],[-78.5018692016602,39.093578338623],[-78.4855194091797,39.1118392944336],[-78.4482498168945,39.1189308166504],[-78.4308395385742,39.1485214233398],
+    //		[-78.4026336669922,39.1704902648926],[-78.4243392944336,39.1975250244141],[-78.42333984375,39.2120399475098],[-78.3993988037109,39.2448501586914],[-78.413818359375,39.257438659668],
+    //		[-78.3411178588867,39.3413581848145],[-78.3442001342773,39.3508567810059],[-78.3657455444336,39.3615875244141],[-78.3505020141602,39.380729675293],[-78.3478164672852,39.456901550293],
+    //		[-78.2771530151367,39.4233665466309],[-78.2297821044922,39.3910140991211],[-78.0336074829102,39.2655372619629],[-78.0997543334961,39.1446685791016],[-78.1089096069336,39.1042823791504],
+    //		[-78.1511688232422,39.056022644043],[-78.1545867919922,39.0405921936035]
+    //	],
+    //	[
+    //		[-78.1327972412109,39.1916427612305],[-78.1827621459961,39.2027130126953],[-78.2050399780273,39.1731262207031],
+    //		[-78.2054824829102,39.1577110290527],[-78.1625823974609,39.1384582519531],[-78.1396865844727,39.164867401123],[-78.1327972412109,39.1916427612305]
+    //	]
+    //]
     // in other cases: geom.coordinates is Array[24]: [[1,2],[3,4]]
+    // [
+    //	 [-80.874755859375,25.8012447357178],[-80.8742065429688,25.9828872680664],[-80.6838607788086,25.9843692779541],[-80.6811676025391,25.960147857666],
+    //	 [-80.2978363037109,25.9572772979736],[-80.2978515625,25.9739627838135],[-80.1280136108398,25.9771671295166],[-80.1933288574219,25.7596549987793],
+    // ]
     if (coords.IsArray() && coords.Size() > 0) {
-        const rapidjson::Value &xys = coords[0][0].IsArray() ? coords[0] : coords;
         gda::PolygonContents *poly = new gda::PolygonContents();
-        poly->num_parts = 1;
-        poly->num_points = xys.Size();
-        poly->parts.push_back(poly->num_points);
-        poly->points.resize(xys.Size());
-
         double minx = std::numeric_limits<double>::max();
         double miny = std::numeric_limits<double>::max();
-        double maxx = std::numeric_limits<double>::min();
-        double maxy = std::numeric_limits<double>::min();
+        double maxx = std::numeric_limits<double>::lowest();
+        double maxy = std::numeric_limits<double>::lowest();
         double x, y;
-        for (size_t i=0; i<xys.Size(); ++i) {
-            const rapidjson::Value &xy = xys[i];
-            x = xy[0].GetDouble();
-            y = xy[1].GetDouble();
-            poly->points[i].x = x;
-            poly->points[i].y = y;
-            if ( x < minx ) minx = x;
-            if ( x >= maxx ) maxx = x;
-            if ( y < miny ) miny = y;
-            if ( y >= maxy ) maxy = y;
+
+        if (coords[0][0].IsNumber()) {
+            // second case
+            const rapidjson::Value &xys = coords;
+            poly->num_parts = 1;
+            poly->num_points = xys.Size();
+            poly->parts.push_back(0);
+            poly->points.resize(xys.Size());
+
+            for (size_t i=0; i<xys.Size(); ++i) {
+                const rapidjson::Value &xy = xys[i];
+                x = xy[0].GetDouble();
+                y = xy[1].GetDouble();
+                poly->points[i].x = x;
+                poly->points[i].y = y;
+                if ( x < minx ) minx = x;
+                if ( x >= maxx ) maxx = x;
+                if ( y < miny ) miny = y;
+                if ( y >= maxy ) maxy = y;
+            }
+
+
+        } else {
+            // first case
+            const rapidjson::Value &parts = coords;
+            size_t n_parts = parts.Size();
+            for (size_t i=0; i<n_parts; ++i) {
+                const rapidjson::Value &part = parts[i];
+                poly->num_parts += 1;
+                poly->parts.push_back(poly->num_points);
+
+                for (size_t j=0; j< part.Size(); ++j) {
+                    const rapidjson::Value& xy = part[j];
+                    x = xy[0].GetDouble();
+                    y = xy[1].GetDouble();
+
+                    poly->points.push_back(gda::Point(x,y));
+                    poly->num_points += 1;
+
+                    if ( x < minx ) minx = x;
+                    if ( x >= maxx ) maxx = x;
+                    if ( y < miny ) miny = y;
+                    if ( y >= maxy ) maxy = y;
+                }
+            }
         }
+
         poly->box.resize(4);
         poly->box[0] = minx;
         poly->box[1] = miny;
         poly->box[2] = maxx;
         poly->box[3] = maxy;
+
         this->main_map.set_bbox(minx, miny);
         this->main_map.set_bbox(maxx, maxy);
         this->main_map.records.push_back(poly);
@@ -288,36 +355,62 @@ void GdaGeojson::addPolygon(const rapidjson::Value &coords)
 
 void GdaGeojson::addMultiPolygons(const rapidjson::Value &coords) 
 {
-    // [Array[24]] [ [ [[1,2],[3,4]], [[5,6],[7,8]] ] ]
+    // [
+    //	[
+    //		[
+    //			[ -78.839393615722699, 38.042407989502003 ],
+    //			[ -78.883575439453097, 38.0301322937012 ], [ -78.898597717285199, 37.990524291992202 ],
+    //		]
+    //	],
+    //	[
+    //		[
+    //			[ -78.857666015625, 38.083003997802699 ], [ -78.878311157226605, 38.092292785644503 ],
+    //		]
+    //	],
+    //	[
+    //		[
+    //			[ -79.040824890136705, 38.145206451416001 ], [ -79.046768188476605, 38.149665832519503 ],
+    //		]
+    //	]
+    //]
     if (coords.IsArray() && coords.Size() > 0) {
-        const rapidjson::Value &parts = coords[0];
+        const rapidjson::Value &parts = coords;
 
         gda::PolygonContents *poly = new gda::PolygonContents();
-        poly->num_parts = parts.Size();
+        poly->num_parts = 0;
         poly->num_points = 0;
-        poly->parts.resize(poly->num_parts);
 
         double minx = std::numeric_limits<double>::max();
-        double miny = std::numeric_limits<double>::min();
-        double maxx = std::numeric_limits<double>::max();
-        double maxy = std::numeric_limits<double>::min();
+        double miny = std::numeric_limits<double>::max();
+        double maxx = std::numeric_limits<double>::lowest();
+        double maxy = std::numeric_limits<double>::lowest();
         double x, y;
-        for (size_t part=0; part < poly->num_parts; ++part) {
-            const rapidjson::Value &xys = parts[part];
-            poly->parts[part] = xys.Size();
 
-            for (size_t i=0; i<xys.Size(); ++i) {
-                const rapidjson::Value &xy = xys[i];
-                x = xy[0].GetDouble();
-                y = xy[1].GetDouble();
+        for (size_t p=0; p< parts.Size(); ++p) {
+            const rapidjson::Value &part = parts[p];
+            size_t sub_parts = part.Size();
 
-                poly->points.push_back(gda::Point(x,y));
-                poly->num_points += 1;
 
-                if ( x < minx ) minx = x;
-                if ( x >= maxx ) maxx = x;
-                if ( y < miny ) miny = y;
-                if ( y >= maxy ) maxy = y;
+            for (size_t sp = 0; sp < sub_parts; ++sp) {
+                const rapidjson::Value &xys = part[sp];
+                size_t n_xy = xys.Size();
+
+                poly->parts.push_back(poly->num_points);
+                poly->num_parts += 1;
+
+                for (size_t i = 0; i < n_xy; ++i) {
+                    const rapidjson::Value &xy = xys[i];
+                    x = xy[0].GetDouble();
+                    y = xy[1].GetDouble();
+
+                    poly->points.push_back(gda::Point(x, y));
+                    poly->num_points += 1;
+
+                    if (x < minx) minx = x;
+                    if (x >= maxx) maxx = x;
+                    if (y < miny) miny = y;
+                    if (y >= maxy) maxy = y;
+                }
             }
         }
         poly->box.resize(4);

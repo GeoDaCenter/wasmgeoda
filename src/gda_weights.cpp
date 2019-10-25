@@ -69,3 +69,35 @@ GeoDaWeight* gda_rook_weights(GdaGeojson* json_map,
     bool is_queen = false;
     return contiguity_weights(is_queen, json_map, order, include_lower_order, precision_threshold);
 }
+
+GeoDaWeight* gda_knn_weights(GdaGeojson* geoda, unsigned int k,
+                             double power,
+                             bool is_inverse,
+                             bool is_arc,
+                             bool is_mile,
+                             const std::string& kernel,
+                             double bandwidth,
+                             bool adaptive_bandwidth,
+                             bool use_kernel_diagnals,
+                             const std::string& polyid)
+{
+    if (geoda == 0) return 0;
+
+    int num_obs = geoda->GetNumObs();
+
+    const std::vector<gda::Point>& centroids = geoda->GetCentroids();
+    std::vector<double> x(num_obs), y(num_obs);
+    for (size_t i=0; i<num_obs; ++i) {
+        x[i] = centroids[i].x;
+        y[i] = centroids[i].y;
+    }
+
+    /*
+    GwtWeight* poW = SpatialIndAlgs::knn_build(x, y, k, is_arc,
+                                               is_mile, is_inverse, power,
+                                               kernel, bandwidth, adaptive_bandwidth, use_kernel_diagnals);
+    poW->GetNbrStats();
+    return (GeoDaWeight*)poW;
+     */
+    return 0;
+}

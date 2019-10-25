@@ -31,9 +31,10 @@ namespace {
         delete w;
     }
 
-    /*
     TEST(WEIGHTS_TEST, ROOK_CREATE) {
-        GeoDa gda("../data/natregimes.shp");
+        std::string file_path = "../data/natregimes.geojson";
+
+        GdaGeojson gda(file_path);
         GeoDaWeight* w = gda_rook_weights(&gda);
 
         EXPECT_THAT(w->num_obs, 3085);
@@ -48,7 +49,9 @@ namespace {
     }
 
     TEST(WEIGHTS_TEST, KNN_CREATE) {
-        GeoDa gda("../data/natregimes.shp");
+        std::string file_path = "../data/natregimes.geojson";
+
+        GdaGeojson gda(file_path);
 
         GeoDaWeight* w = gda_knn_weights(&gda, 4);
 
@@ -63,6 +66,7 @@ namespace {
         delete w;
     }
 
+    /*
     TEST(WEIGHTS_TEST, DIST_CREATE) {
         GeoDa gda("../data/natregimes.shp");
         double min_thres = gda_min_distthreshold(&gda);
