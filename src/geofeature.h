@@ -29,6 +29,9 @@ namespace gda {
 			return (abs(x - p.x) <= precision_threshold &&
 							abs(y - p.y) <= precision_threshold);
 		}
+		double distance(Point& p) {
+			return sqrt( (x - p.x)*(x-p.x) + (y-p.y)*(y-p.y) );
+		}
 	};
 	
 	bool operator==(Point const& a, Point const& b);

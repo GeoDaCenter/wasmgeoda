@@ -14,6 +14,37 @@ GdaGeojson::GdaGeojson()
 
 }
 
+GdaGeojson::GdaGeojson(const std::string& file_path)
+        : GdaGeojson()
+{
+    std::string filename = file_path.substr(file_path.find_last_of("/") + 1);
+
+    FILE *fp;
+    long lSize;
+    char *buffer;
+
+    fp = fopen (file_path.c_str(), "rb" );
+    if( !fp ) perror("blah.txt"),exit(1);
+
+    fseek( fp , 0L , SEEK_END);
+    lSize = ftell( fp );
+    rewind( fp );
+
+    /* allocate memory for entire content */
+    buffer = (char*)calloc( 1, lSize+1 );
+    if( !buffer ) fclose(fp),fputs("memory alloc fails",stderr),exit(1);
+
+    /* copy the file into the buffer */
+    if( 1!=fread( buffer , lSize, 1 , fp) )
+        fclose(fp),free(buffer),fputs("entire read fails",stderr),exit(1);
+
+    /* do your work here, buffer is a string contains the whole text */
+    this->Read(filename.c_str(), buffer);
+
+    fclose(fp);
+    free(buffer);
+}
+
 GdaGeojson::GdaGeojson(const char* file_name, const char* in_content)
 : GdaGeojson()
 {
@@ -47,7 +78,19 @@ gda::ShapeType GdaGeojson::GetMapType()
 
 const std::vector<gda::Point>& GdaGeojson::GetCentroids()
 {
-    return std::vector<gda::Point>();
+    if (this->centroids.empty()) {
+        if (this->main_map.shape_type == gda::POINT_TYP) {
+            this->centroids.resize(this->main_map.num_obs);
+            for (size_t i=0; i<this->centroids.size(); ++i) {
+                gda::PointContents* pt = (gda::PointContents*)this->main_map.records[i];
+                this->centroids[i].x = pt->x;
+                this->centroids[i].y = pt->y;
+            }
+        } else if (this->main_map.shape_type == gda::POLYGON) {
+
+        }
+    }
+    return this->centroids;
 }
 
 GeoDaWeight* GdaGeojson::CreateQueenWeights(unsigned int order, 
@@ -56,7 +99,21 @@ GeoDaWeight* GdaGeojson::CreateQueenWeights(unsigned int order,
 {
     GeoDaWeight* w = gda_queen_weights(this, order, include_lower_order, precision_threshold);
     std::stringstream w_uid;
-    w_uid << "w";
+    w_uid << "w_queen";
+    w_uid << order;
+    w_uid << include_lower_order;
+    w_uid << precision_threshold;
+    this->weights_dict[w_uid.str()] = w;
+    return w;
+}
+
+GeoDaWeight* GdaGeojson::CreateRookWeights(unsigned int order, 
+        bool include_lower_order,
+ 	    double precision_threshold)
+{
+    GeoDaWeight* w = gda_rook_weights(this, order, include_lower_order, precision_threshold);
+    std::stringstream w_uid;
+    w_uid << "w_rook";
     w_uid << order;
     w_uid << include_lower_order;
     w_uid << precision_threshold;

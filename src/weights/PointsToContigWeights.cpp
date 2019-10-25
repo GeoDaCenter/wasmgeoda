@@ -102,7 +102,6 @@ bool gda::PointsToContiguity(const std::vector<double>& x,
 
         while (e) {
             // shared edges will be visited by neighbor sites
-            site->p;
             if (queen) {
                 jcvpoint_to_site[jcv_point_str(e->pos[0])].insert(site->index);
                 jcvpoint_to_site[jcv_point_str(e->pos[1])].insert(site->index);
@@ -151,5 +150,6 @@ bool gda::PointsToContiguity(const std::vector<double>& x,
     }
 
     jcv_diagram_free( &diagram );
+    return true;
 }
 

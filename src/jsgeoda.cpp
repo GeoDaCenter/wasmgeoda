@@ -1,4 +1,6 @@
+#ifdef __JSGEODA__
 #include <emscripten/bind.h>
+#endif
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -50,6 +52,7 @@ void new_geojsonmap(std::string file_name, const int & addr, const size_t & len)
 	geojson_maps[file_name] = json_map;
 }
 
+#ifdef __JSGEODA__
 //Using this command to compile
 //  emcc --bind -O3 readFile.cpp -s WASM=1 -s TOTAL_MEMORY=268435456 -o api.js --std=c++11
 //Note that you need to make sure that there's enough memory available to begin with.
@@ -57,6 +60,7 @@ void new_geojsonmap(std::string file_name, const int & addr, const size_t & len)
 EMSCRIPTEN_BINDINGS(my_module) {
   emscripten::function("new_geojsonmap", &new_geojsonmap);
 }
+#endif
 
 extern "C" 
 int get_num_obs(char* _map_uid) {
@@ -108,10 +112,12 @@ void local_moran(const std::string& map_uid,
 
 }
 
+/*
 int main() {
+    std::cout << "print_json" << std::endl;
 	return 0;
 }
-
+*/
 void print_json(char* content) {
 	std::cout << "print_json" << std::endl;
 	std::cout << content << std::endl;

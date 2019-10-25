@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <string>
 #include <rapidjson/document.h>
 
 #include "weights/GeodaWeight.h"
@@ -13,6 +14,8 @@ class GdaGeojson
 public:
     // default constructor for std::vector and std::map
     GdaGeojson();
+
+    GdaGeojson(const std::string& file_path);
     
     GdaGeojson(const char* file_name, const char* in_content);
 
@@ -28,9 +31,12 @@ public:
 
     gda::MainMap& GetMainMap();
 
-
     // weights related functions:
     GeoDaWeight* CreateQueenWeights(unsigned int order=1, 
+        bool include_lower_order = false,
+ 	    double precision_threshold = 0);
+
+    GeoDaWeight* CreateRookWeights(unsigned int order=1, 
         bool include_lower_order = false,
  	    double precision_threshold = 0);
 
@@ -38,7 +44,9 @@ protected:
     gda::MainMap main_map;
 
     std::map<std::string, GeoDaWeight*> weights_dict;
-    
+
+     std::vector<gda::Point> centroids;
+
     // read geojson related functions:
     void init();
 
