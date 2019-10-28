@@ -7,6 +7,7 @@ set (DEP_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/3rd_party)
 
 message(STATUS "dep library path: ${DEP_LIBRARY_PATH}")
 set (RAPIDJSON_INCLUDE_DIR ${DEP_LIBRARY_PATH}/rapidjson-1.1.0/include)
+set (BOOST_INCLUDE_DIR ${DEP_LIBRARY_PATH}/boost-1.70.0)
 
 set(src
 		src/jsgeoda.cpp
@@ -17,6 +18,9 @@ set(src
 		src/weights/PolysToContigWeights.cpp
 		src/weights/PointsToContigWeights.cpp
 		src/gda_weights.cpp
+		src/GenGeomAlgs.cpp
+		src/SpatialIndAlgs.cpp
+		src/GenUtils.cpp
 )
 
 set(exports 
@@ -51,7 +55,6 @@ add_executable(${TARGET_NAME} ${src})
 if (USE_EMCC)
 	target_compile_definitions(${TARGET_NAME} PRIVATE __JSGEODA__=1)
 else()
-	set (BOOST_INCLUDE_DIR ${DEP_LIBRARY_PATH}/boost/include)
 	target_include_directories(${TARGET_NAME} PUBLIC ${BOOST_INCLUDE_DIR} )
 endif()
 
@@ -82,5 +85,9 @@ target_include_directories(runUnitTests PUBLIC
 		${gmock_SOURCE_DIR}/include
 		${RAPIDJSON_INCLUDE_DIR} )
 
+if (USE_EMCC)
+else()
+	target_include_directories(runUnitTests PUBLIC ${BOOST_INCLUDE_DIR} )
+endif()
 # Link test executable against gtest & gtest_main
 target_link_libraries(runUnitTests gtest gtest_main)

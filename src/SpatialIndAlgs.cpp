@@ -1,5 +1,16 @@
 #include <math.h>
+#include <string>
+#include <fstream>
+#include <boost/foreach.hpp>
+#include <boost/random.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/random/uniform_01.hpp>
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+
+#include "GenGeomAlgs.h"
 #include "SpatialIndAlgs.h"
+
 
 using namespace std;
 
@@ -27,6 +38,98 @@ void SpatialIndAlgs::to_3d_centroids(const vector<pt_lonlat>& ptll,
 	}
 }
 
+
+
+
+void SpatialIndAlgs::default_test()
+{
+    // create the rtree using default constructor
+    rtree_box_2d_t rtree;
+
+    // create some values
+    for ( unsigned i = 0 ; i < 10 ; ++i ) {
+        // create a box
+        box_2d b(pt_2d(i + 0.0f, i + 0.0f), pt_2d(i + 0.5f, i + 0.5f));
+        // insert new value
+        rtree.insert(std::make_pair(b, i));
+    }
+
+    // find values intersecting some area defined by a box
+    box_2d query_box(pt_2d(0, 0), pt_2d(5, 5));
+    std::vector<box_2d_val> result_s;
+    rtree.query(bgi::intersects(query_box), std::back_inserter(result_s));
+
+	const int k=3;
+    // find k nearest values to a point
+    std::vector<box_2d_val> result_n;
+    rtree.query(bgi::nearest(pt_2d(0, 0), k), std::back_inserter(result_n));
+
+    // note: in Boost.Geometry WKT representation of a box is polygon
+
+    // display results
+	stringstream ss;
+    ss << "spatial query box:" << std::endl;
+    ss << bg::wkt<box_2d>(query_box) << std::endl;
+    ss << "spatial query result:" << std::endl;
+    BOOST_FOREACH(box_2d_val const& v, result_s) {
+        ss << bg::wkt<box_2d>(v.first) << " - " << v.second << std::endl;
+	}
+
+    ss << k << "-nn query point:" << std::endl;
+    ss << bg::wkt<pt_2d>(pt_2d(0, 0)) << std::endl;
+    ss << k << "-nn query result:" << std::endl;
+    BOOST_FOREACH(box_2d_val const& v, result_n) {
+        ss << bg::wkt<box_2d>(v.first) << " - " << v.second << std::endl;
+	}
+
+	pt_lonlat sp(0, 45);
+	ss << "Spherical pt get<0>: " << bg::get<0>(sp) << std::endl;
+	ss << "Spherical pt get<1>: " << bg::get<1>(sp) << std::endl;
+	ss << "Spherical pt: " << bg::wkt<pt_lonlat>(sp) << std::endl;
+
+	ss << "default_test() END";
+}
+
+void SpatialIndAlgs::print_rtree_stats(rtree_box_2d_t& rtree)
+{
+	stringstream ss;
+	ss << "Rtree stats:" << endl;
+	ss << "  size: " << rtree.size() << endl;
+	ss << "  empty?: " << rtree.empty() << endl;
+	box_2d bnds = rtree.bounds();
+	ss << "  bounds: " << bg::wkt<box_2d>(bnds);
+}
+
+void SpatialIndAlgs::query_all_boxes(rtree_box_2d_t& rtree)
+{
+	int dzero = 0;
+	int dpos = 0;
+	int cnt=0;
+	box_2d bnds = rtree.bounds();
+
+	for (rtree_box_2d_t::const_query_iterator it =
+			 rtree.qbegin(bgi::intersects(rtree.bounds()));
+		 it != rtree.qend() ; ++it) { ++cnt; }
+
+	cnt = 0;
+
+    rtree_box_2d_t::const_query_iterator it;
+	for (it=rtree.qbegin(bgi::intersects(rtree.bounds())); it != rtree.qend(); ++it)
+	{
+		const box_2d_val& v = *it;
+		pt_2d c;
+		boost::geometry::centroid(v.first, c);
+		vector<box_2d_val> q;
+		rtree.query(bgi::intersects(v.first), std::back_inserter(q));
+		int qcnt=0;
+		BOOST_FOREACH(box_2d_val const& w, q) {
+			if (w.second == v.second)
+                continue;
+			++cnt;
+			++qcnt;
+		}
+	}
+}
 
 void SpatialIndAlgs::knn_query(const rtree_pt_2d_t& rtree, int nn)
 {
@@ -61,7 +164,7 @@ GwtWeight* SpatialIndAlgs::knn_build(const vector<double>& x,
                                      int nn,
                                      bool is_arc, bool is_mi,
                                      bool is_inverse, double power,
-                                     const wxString& kernel,
+                                     const std::string& kernel,
                                      double bandwidth,
                                      bool adaptive_bandwidth,
                                      bool use_kernel_diagnals)
@@ -94,7 +197,7 @@ GwtWeight* SpatialIndAlgs::knn_build(const vector<double>& x,
 	return gwt;
 }
 
-void SpatialIndAlgs::apply_kernel(const GwtWeight* Wp, const wxString& kernel, bool use_kernel_diagnals)
+void SpatialIndAlgs::apply_kernel(const GwtWeight* Wp, const std::string& kernel, bool use_kernel_diagnals)
 {
     // apply kernel
     double gaussian_const = pow(M_PI * 2.0, -0.5);
@@ -108,22 +211,22 @@ void SpatialIndAlgs::apply_kernel(const GwtWeight* Wp, const wxString& kernel, b
                 continue;
             }
             // functions follow Anselin and Rey (2010) table 5.4
-            if (kernel.IsSameAs("triangular",false)) {
+            if (boost::iequals(kernel, "triangular")) {
                 nbrs[j].weight = 1 - nbrs[j].weight;
-            } else if (kernel.IsSameAs("uniform", false)) {
+            } else if (boost::iequals(kernel, "uniform")) {
                 nbrs[j].weight = 0.5;
-            } else if (kernel.IsSameAs("epanechnikov", false)) {
+            } else if (boost::iequals(kernel, "epanechnikov")) {
                 nbrs[j].weight = (3.0 / 4.0) * (1.0 - pow(nbrs[j].weight,2.0));
-            } else if (kernel.IsSameAs("quartic", false)) {
+            } else if (boost::iequals(kernel, "quartic")) {
                 nbrs[j].weight = (15.0 / 16.0) * pow((1.0 - pow(nbrs[j].weight,2.0)), 2.0);
-            } else if (kernel.IsSameAs("gaussian", false)) {
+            } else if (boost::iequals(kernel, "gaussian")) {
                 nbrs[j].weight = gaussian_const * exp( -pow(nbrs[j].weight, 2.0) / 2.0 );
             }
         }
     }
 }
 
-GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_2d_t& rtree, int nn, bool is_inverse, double power, const wxString& kernel, double bandwidth_, bool adaptive_bandwidth_, bool use_kernel_diagnals)
+GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_2d_t& rtree, int nn, bool is_inverse, double power, const std::string& kernel, double bandwidth_, bool adaptive_bandwidth_, bool use_kernel_diagnals)
 {
 	GwtWeight* Wp = new GwtWeight;
 	Wp->num_obs = rtree.size();
@@ -149,7 +252,7 @@ GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_2d_t& rtree, int nn, bool is
 		e.alloc(q.size());
         double local_bandwidth = 0;
 		BOOST_FOREACH(pt_2d_val const& w, q) {
-			if (kernel.IsEmpty() && w.second == v.second)
+			if (kernel.empty() && w.second == v.second)
                 continue;
 			GwtNeighbor neigh;
 			neigh.nbx = w.second;
@@ -161,7 +264,7 @@ GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_2d_t& rtree, int nn, bool is
 			e.Push(neigh);
 			++cnt;
 		}
-        if (adaptive_bandwidth && local_bandwidth > 0 && !kernel.IsEmpty()) {
+        if (adaptive_bandwidth && local_bandwidth > 0 && !kernel.empty()) {
             GwtNeighbor* nbrs = e.dt();
             for (int j=0; j<e.Size(); j++) {
                 nbrs[j].weight = nbrs[j].weight / local_bandwidth;
@@ -169,7 +272,7 @@ GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_2d_t& rtree, int nn, bool is
         }
 	}
 
-    if (!adaptive_bandwidth && bandwidth > 0 && !kernel.IsEmpty()) {
+    if (!adaptive_bandwidth && bandwidth > 0 && !kernel.empty()) {
         // use max knn distance as bandwidth
         for (int i=0; i<Wp->num_obs; i++) {
             GwtElement& e = Wp->gwt[i];
@@ -179,7 +282,7 @@ GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_2d_t& rtree, int nn, bool is
             }
         }
     }
-    if (!kernel.IsEmpty()) {
+    if (!kernel.empty()) {
         
         apply_kernel(Wp, kernel, use_kernel_diagnals);
     }
@@ -188,9 +291,8 @@ GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_2d_t& rtree, int nn, bool is
 }
 
 GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_3d_t& rtree, int nn,
-					 bool is_arc, bool is_mi,  bool is_inverse, double power, const wxString& kernel, double bandwidth_, bool adaptive_bandwidth_, bool use_kernel_diagnals)
+					 bool is_arc, bool is_mi,  bool is_inverse, double power, const std::string& kernel, double bandwidth_, bool adaptive_bandwidth_, bool use_kernel_diagnals)
 {
-	wxStopWatch sw;
 	using namespace GenGeomAlgs;
 
 	GwtWeight* Wp = new GwtWeight;
@@ -226,7 +328,7 @@ GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_3d_t& rtree, int nn,
 		}
         double local_bandwidth = 0;
 		BOOST_FOREACH(pt_3d_val const& w, q) {
-			if (kernel.IsEmpty() && w.second == v.second)
+			if (kernel.empty() && w.second == v.second)
                 continue;
 			GwtNeighbor neigh;
 			neigh.nbx = w.second;
@@ -255,7 +357,7 @@ GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_3d_t& rtree, int nn,
 			e.Push(neigh);
 			++cnt;
 		}
-        if (adaptive_bandwidth && local_bandwidth > 0 && !kernel.IsEmpty()) {
+        if (adaptive_bandwidth && local_bandwidth > 0 && !kernel.empty()) {
             GwtNeighbor* nbrs = e.dt();
             for (int j=0; j<e.Size(); j++) {
                 nbrs[j].weight = nbrs[j].weight / local_bandwidth;
@@ -263,7 +365,7 @@ GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_3d_t& rtree, int nn,
         }
 	}
 
-    if (!adaptive_bandwidth && bandwidth > 0 && !kernel.IsEmpty()) {
+    if (!adaptive_bandwidth && bandwidth > 0 && !kernel.empty()) {
         // use max knn distance as bandwidth
         for (int i=0; i<Wp->num_obs; i++) {
             GwtElement& e = Wp->gwt[i];
@@ -273,14 +375,10 @@ GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_3d_t& rtree, int nn,
             }
         }
     }
-    if (!kernel.IsEmpty()) {
+    if (!kernel.empty()) {
         apply_kernel(Wp, kernel, use_kernel_diagnals);
     }
     
-	stringstream ss;
-	ss << "Time to create 3D " << (is_arc ? " arc " : "")
-	   << nn << "-NN GwtWeight "
-	   << "with " << cnt << " total neighbors in ms : " << sw.Time();
 	return Wp;
 }
 
@@ -306,7 +404,6 @@ double SpatialIndAlgs::est_thresh_for_avg_num_neigh(const rtree_pt_2d_t& rtree,
 													double avg_n)
 {
 	// Use a binary search to estimate threshold to acheive average num neighbors
-	wxStopWatch sw;
 	using namespace GenGeomAlgs;
 	int max_iters = 20;
 	int iters = 0;
@@ -355,19 +452,12 @@ double SpatialIndAlgs::est_thresh_for_avg_num_neigh(const rtree_pt_2d_t& rtree,
 		}
 	}
 
-	stringstream ss;
-	ss << "Estimated " << th << " threshold for average "
-	   << "number neighbors " << avg_n << "." << endl;
-	ss << "Calculation time to peform " << iters << " iterations: "
-	   << sw.Time() << " ms.";
-	LOG_MSG("Exiting est_thresh_for_avg_num_neigh");
 	return th;
 }
 
 double SpatialIndAlgs::est_avg_num_neigh_thresh(const rtree_pt_2d_t& rtree,
 																								double th, size_t trials)
 {
-	wxStopWatch sw;
 	using namespace GenGeomAlgs;
 
 	vector<pt_2d_val> query_pts;
@@ -394,12 +484,6 @@ double SpatialIndAlgs::est_avg_num_neigh_thresh(const rtree_pt_2d_t& rtree,
 
 	double avg = ((double) tot_neigh) / ((double) trials);
 
-	stringstream ss;
-	ss << "Estimated " << avg << " neighbors on average for "
-	   << "threshold " << th << "." << endl;
-	ss << "Time to perform " << trials << " random trials: "
-	   << sw.Time() << " ms.";
-	//LOG_MSG(ss.str());
 	return avg;
 }
 
@@ -407,7 +491,6 @@ double SpatialIndAlgs::est_mean_distance(const std::vector<double>& x,
 										 const std::vector<double>& y,
 										 bool is_arc, size_t max_iters)
 {
-	wxStopWatch sw;
 	using namespace GenGeomAlgs;
 	const size_t pts_sz = x.size();
 	const size_t all_pairs_sz = (pts_sz*(pts_sz-1))/2;
@@ -436,8 +519,6 @@ double SpatialIndAlgs::est_mean_distance(const std::vector<double>& x,
 		}
 		smp_cnt = max_iters;
 	}
-	stringstream ss;
-	ss << "est_mean_distance finished in " << sw.Time() << " ms.";
 	return sum/smp_cnt;
 }
 
@@ -445,7 +526,6 @@ double SpatialIndAlgs::est_median_distance(const std::vector<double>& x,
 										   const std::vector<double>& y,
 										   bool is_arc, size_t max_iters)
 {
-	wxStopWatch sw;
 	using namespace GenGeomAlgs;
 	if (x.size() != y.size() || x.size() == 0 || y.size() == 0) { return -1; }
 	const size_t pts_sz = x.size();
@@ -484,8 +564,6 @@ double SpatialIndAlgs::est_median_distance(const std::vector<double>& x,
 		}
 	}
 	sort(v.begin(), v.end());
-	stringstream ss;
-	ss << "est_median_distance finished in " << sw.Time() << " ms.";
 	return v[v.size()/2];
 }
 
@@ -493,7 +571,7 @@ GwtWeight* SpatialIndAlgs::thresh_build(const std::vector<double>& x,
                                         const std::vector<double>& y,
                                         double th, double power,
                                         bool is_arc, bool is_mi,
-                                        const wxString& kernel,
+                                        const std::string& kernel,
                                         bool use_kernel_diagnals)
 {
 	using namespace GenGeomAlgs;
@@ -527,10 +605,8 @@ GwtWeight* SpatialIndAlgs::thresh_build(const std::vector<double>& x,
 	return gwt;
 }
 
-GwtWeight* SpatialIndAlgs::thresh_build(const rtree_pt_2d_t& rtree, double th, double power, const wxString& kernel, bool use_kernel_diagnals)
+GwtWeight* SpatialIndAlgs::thresh_build(const rtree_pt_2d_t& rtree, double th, double power, const std::string& kernel, bool use_kernel_diagnals)
 {
-	wxStopWatch sw;
-    
 	GwtWeight* Wp = new GwtWeight;
 	Wp->num_obs = rtree.size();
 	Wp->is_symmetric = false;
@@ -563,22 +639,6 @@ GwtWeight* SpatialIndAlgs::thresh_build(const rtree_pt_2d_t& rtree, double th, d
 			}
 		}
 
-#ifndef __LIBGEODA__
-        if (lcnt > 200 && ignore_too_large_compute == false) {
-
-            wxString msg = _("You can try to proceed but the current threshold distance value might be too large to compute. If it fails, please input a smaller distance band (which might leave some observations neighborless) or use other weights (e.g. KNN).");
-			wxMessageDialog dlg(NULL, msg, "Do you want to continue?", wxYES_NO | wxYES_DEFAULT);
-			if (dlg.ShowModal() != wxID_YES) {
-				// clean up memory
-				delete Wp;
-				throw GdaException(msg.mb_str());
-			}
-			else {
-				ignore_too_large_compute = true;
-			}
-            
-        }
-#endif
 		GwtElement& e = Wp->gwt[obs];
 		e.alloc(lcnt);
 		BOOST_FOREACH(pt_2d_val const& w, l) {
@@ -586,28 +646,23 @@ GwtWeight* SpatialIndAlgs::thresh_build(const rtree_pt_2d_t& rtree, double th, d
 			neigh.nbx = w.second;
 			double w_val = bg::distance(v.first, w.first);
             if (power != 1) w_val = pow(w_val, power);
-            if (!kernel.IsEmpty()) w_val = w_val / th;
+            if (!kernel.empty()) w_val = w_val / th;
             neigh.weight = w_val;
 			e.Push(neigh);
 			++cnt;
 		}
 	}
 
-    if (!kernel.IsEmpty()) {
+    if (!kernel.empty()) {
         apply_kernel(Wp, kernel, use_kernel_diagnals);
     }
     
-	stringstream ss;
-	ss << "Time to create " << th << " threshold GwtWeight,"
-	   << endl << "  with " << cnt << " total neighbors in ms : "
-	   << sw.Time();
 	return Wp;
 }
 
 double SpatialIndAlgs::est_avg_num_neigh_thresh(const rtree_pt_3d_t& rtree,
 					 double th,	size_t trials)
 {
-	wxStopWatch sw;
 	using namespace GenGeomAlgs;
 
 	vector<pt_3d_val> query_pts;
@@ -633,19 +688,13 @@ double SpatialIndAlgs::est_avg_num_neigh_thresh(const rtree_pt_3d_t& rtree,
 		}
 	}
 	double avg = ((double) tot_neigh) / ((double) trials);
-	stringstream ss;
-	ss << "Estimated " << avg << " neighbors on average for "
-	   << "threshold " << th << "." << endl;
-	ss << "Time to perform " << trials << " random trials: "
-	   << sw.Time() << " ms.";
 	return avg;
 }
 
 /** threshold th is the radius of intersection sphere with
   respect to the unit shpere of the 3d point rtree */
-GwtWeight* SpatialIndAlgs::thresh_build(const rtree_pt_3d_t& rtree, double th, double power, bool is_mi, const wxString& kernel, bool use_kernel_diagnals)
+GwtWeight* SpatialIndAlgs::thresh_build(const rtree_pt_3d_t& rtree, double th, double power, bool is_mi, const std::string& kernel, bool use_kernel_diagnals)
 {
-	wxStopWatch sw;
 	using namespace GenGeomAlgs;
 	
 	GwtWeight* Wp = new GwtWeight;
@@ -706,19 +755,14 @@ GwtWeight* SpatialIndAlgs::thresh_build(const rtree_pt_3d_t& rtree, double th, d
 				d = ComputeArcDistKm(lon_v, lat_v, lon_w, lat_w);
 			}
             if (power!=1) d = pow(d, power);
-            if (!kernel.IsEmpty()) d = d / th;
+            if (!kernel.empty()) d = d / th;
 			neigh.weight = d;
 			e.Push(neigh);
 			++cnt;
 		}
 	}
 
-	stringstream ss;
-	ss << "Time to create arc " << th << " threshold GwtWeight,"
-	   << endl << "  with " << cnt << " total neighbors in ms : "
-	   << sw.Time();
-    
-    if (!kernel.IsEmpty()) {
+    if (!kernel.empty()) {
         apply_kernel(Wp, kernel, use_kernel_diagnals);
     }
     
@@ -762,7 +806,6 @@ void SpatialIndAlgs::get_pt_rtree_stats(const rtree_pt_2d_t& rtree,
                                         double& min_d_1nn, double& max_d_1nn,
                                         double& mean_d_1nn, double& median_d_1nn)
 {
-	wxStopWatch sw;
 	const int k=2;
 	size_t obs = rtree.size();
 	vector<double> d(obs);
@@ -785,14 +828,6 @@ void SpatialIndAlgs::get_pt_rtree_stats(const rtree_pt_2d_t& rtree,
 	double s=0;
 	for (size_t i=0; i<obs; ++i) s += d[i];
 	mean_d_1nn = s / (double) obs;
-
-	stringstream ss;
-	ss << "Euclidean points stats:" << endl;
-	ss << "  min_d_1nn: " << min_d_1nn << endl;
-	ss << "  max_d_1nn: " << max_d_1nn << endl;
-	ss << "  median_d_1nn: " << median_d_1nn << endl;
-	ss << "  mean_d_1nn: " << mean_d_1nn << endl;
-	ss << "  running time in ms: " << sw.Time();
 }
 
 /** results returned in radians */
@@ -800,7 +835,6 @@ void SpatialIndAlgs::get_pt_rtree_stats(const rtree_pt_3d_t& rtree,
 					 double& min_d_1nn, double& max_d_1nn,
 					 double& mean_d_1nn, double& median_d_1nn)
 {
-	wxStopWatch sw;
 	using namespace GenGeomAlgs;
 	size_t obs = rtree.size();
 	vector<double> d(obs);
@@ -829,25 +863,6 @@ void SpatialIndAlgs::get_pt_rtree_stats(const rtree_pt_3d_t& rtree,
 	for (size_t i=0; i<obs; ++i) s += d[i];
 	mean_d_1nn = s / (double) obs;
 
-	stringstream ss;
-	ss << "Long / Lat points stats:" << endl;
-	ss << "  min_d_1nn: " << min_d_1nn << " rad, "
-	   << RadToDeg(min_d_1nn) << " deg, "
-	   << EarthRadToKm(min_d_1nn) << " km, "
-	   << EarthRadToMi(min_d_1nn) << " mi" << endl;
-	ss << "  max_d_1nn: " << max_d_1nn << " rad, "
-	   << RadToDeg(max_d_1nn) << " deg, "
-	   << EarthRadToKm(max_d_1nn) << " km, "
-	   << EarthRadToMi(max_d_1nn) << " mi" << endl;
-	ss << "  median_d_1nn: " << median_d_1nn << " rad, "
-	   << RadToDeg(median_d_1nn) << " deg, "
-	   << EarthRadToKm(median_d_1nn) << " km, "
-	   << EarthRadToMi(median_d_1nn) << " mi" << endl;
-	ss << "  mean_d_1nn: " << mean_d_1nn << " rad, "
-	   << RadToDeg(mean_d_1nn) << " deg, "
-	   << EarthRadToKm(mean_d_1nn) << " km, "
-	   << EarthRadToMi(mean_d_1nn) << " mi" << endl;
-	ss << "  running time in ms: " << sw.Time();
 }
 
 GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_lonlat_t& rtree, int nn)
@@ -884,10 +899,10 @@ GwtWeight* SpatialIndAlgs::knn_build(const rtree_pt_lonlat_t& rtree, int nn)
 }
 
 bool SpatialIndAlgs::write_gwt(const GwtWeight* W,
-							   const wxString& _layer_name,
-							   const wxString& ofname,
-							   const wxString& vname,
-							   const std::vector<wxInt64>& id_vec)  
+							   const std::string& _layer_name,
+							   const std::string& ofname,
+							   const std::string& vname,
+							   const std::vector<int>& id_vec)
 {
     if (!W) {
         return false;
@@ -896,37 +911,29 @@ bool SpatialIndAlgs::write_gwt(const GwtWeight* W,
 	size_t num_obs = W->num_obs;
     
     if (!g ||
-        _layer_name.IsEmpty() ||
-        ofname.IsEmpty() ||
+        _layer_name.empty() ||
+        ofname.empty() ||
         id_vec.size() == 0 ||
         num_obs != id_vec.size())
     {
         return false;
     }
 
-    wxFileName gwtfn(ofname);
-    wxString gwt_ofn(gwtfn.GetFullPath());
+	std:ofstream out(ofname, std::ofstream::out);
 
-#ifdef _MSC_VER
-	std:ofstream out(gwt_ofn.wc_str());
-#else
-	std:ofstream out;
-	out.open(GET_ENCODED_FILENAME(gwt_ofn));
-#endif
-    
     if (!(out.is_open() && out.good())) {
         return false;
     }
 
-    wxString layer_name(_layer_name);
+    std::string layer_name(_layer_name);
     // if layer_name contains an empty space, the layer name should be
     // braced with quotes "layer name"
-    if (layer_name.Contains(" ")) {
+    if (layer_name.find(" ") != std::string::npos) {
         layer_name = "\"" + layer_name + "\"";
     }
     
     out << "0" << " " << num_obs << " " << layer_name;
-    out << " " << vname.mb_str() << endl;
+    out << " " << vname << endl;
     
     for (size_t i=0; i<num_obs; ++i) {
         for (long nbr=0, sz=g[i].Size(); nbr<sz; ++nbr) {
@@ -936,6 +943,7 @@ bool SpatialIndAlgs::write_gwt(const GwtWeight* W,
 			out << ' ' << setprecision(9) << w << endl;
         }
     }
+    out.close();
     return true;
 }
 
@@ -972,13 +980,6 @@ std::ostream& SpatialIndAlgs::operator<< (std::ostream &out,
     return out;
 }
 
-#ifndef __LIBGEODA__
-std::ostream& SpatialIndAlgs::operator<< (std::ostream &out,
-										  const wxRealPoint& pt) {
-	out << "(" << pt.x << "," << pt.y << ")";
-    return out;
-}
-#endif
 
 std::ostream& SpatialIndAlgs::operator<< (std::ostream &out, const XyzPt& pt) {
 	out << "(" << pt.x << "," << pt.y << "," << pt.z << ")";

@@ -5,6 +5,7 @@
 #include "weights/PolysToContigWeights.h"
 #include "weights/GalWeight.h"
 #include "weights/GeodaWeight.h"
+#include "SpatialIndAlgs.h"
 #include "geojson.h"
 #include "gda_weights.h"
 
@@ -92,12 +93,9 @@ GeoDaWeight* gda_knn_weights(GdaGeojson* geoda, unsigned int k,
         y[i] = centroids[i].y;
     }
 
-    /*
     GwtWeight* poW = SpatialIndAlgs::knn_build(x, y, k, is_arc,
                                                is_mile, is_inverse, power,
                                                kernel, bandwidth, adaptive_bandwidth, use_kernel_diagnals);
     poW->GetNbrStats();
     return (GeoDaWeight*)poW;
-     */
-    return 0;
 }

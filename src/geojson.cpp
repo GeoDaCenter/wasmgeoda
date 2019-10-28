@@ -2,9 +2,9 @@
 #include <sstream> 
 #include <algorithm>
 #include <limits>
+#include <boost/algorithm/string.hpp>
 
 #include "shape/centroid.h"
-#include "utils.h"
 #include "gda_weights.h"
 #include "geojson.h"
 
@@ -203,19 +203,19 @@ void GdaGeojson::createGeometryFeature(size_t i, const rapidjson::Value& geom)
     const rapidjson::Value &coords = geom["coordinates"];
 
     std::string geom_type = geom["type"].GetString();
-    if (iequals(geom_type, "Point")) {
+    if (boost::iequals(geom_type, "Point")) {
         this->addPoint(coords);
         this->main_map.shape_type = gda::POINT_TYP;
 
-    } else if (iequals(geom_type, "MultiPoint")) {
+    } else if (boost::iequals(geom_type, "MultiPoint")) {
         this->addMultiPoints(coords);
         this->main_map.shape_type = gda::POINT_TYP;
 
-    } else if (iequals(geom_type, "Polygon")) {
+    } else if (boost::iequals(geom_type, "Polygon")) {
         this->addPolygon(coords);
         this->main_map.shape_type = gda::POLYGON;
 
-    } else if (iequals(geom_type, "MultiPolygon")) {
+    } else if (boost::iequals(geom_type, "MultiPolygon")) {
         this->addMultiPolygons(coords);
         this->main_map.shape_type = gda::POLYGON;
         
