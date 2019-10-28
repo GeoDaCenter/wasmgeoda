@@ -112,12 +112,13 @@ void local_moran(const std::string& map_uid,
 
 }
 
-/*
+#ifdef __JSGEODA__
 int main() {
     std::cout << "print_json" << std::endl;
 	return 0;
 }
-*/
+#endif
+
 void print_json(char* content) {
 	std::cout << "print_json" << std::endl;
 	std::cout << content << std::endl;

@@ -37,12 +37,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(TARGET_NAME ${project})
 if (USE_EMCC)
-	message("MY_VARIABLE evaluates to True")
-	set(EXE_NAME ${project}.html)
-	SET(CMAKE_C_COMPILER emcc)
-	SET(CMAKE_CPP_COMPILER em++)
-	SET(CMAKE_CXX_COMPILER em++)
-	set( CMAKE_CXX_FLAGS "-s BINARYEN_TRAP_MODE='clamp' -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
+	set(TARGET_NAME ${project}.html)
+	message("MY_VARIABLE evaluates to ${TARGET_NAME}")
+	SET(CMAKE_C_COMPILER /Users/xunli/Downloads/emsdk/fastcomp/emscripten/emcc)
+	SET(CMAKE_CPP_COMPILER /Users/xunli/Downloads/emsdk/fastcomp/emscripten/em++)
+	SET(CMAKE_CXX_COMPILER /Users/xunli/Downloads/emsdk/fastcomp/emscripten/em++)
+	set( CMAKE_CXX_FLAGS "-s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
 endif()
 
 # specify the project
@@ -50,6 +50,9 @@ add_executable(${TARGET_NAME} ${src})
 
 if (USE_EMCC)
 	target_compile_definitions(${TARGET_NAME} PRIVATE __JSGEODA__=1)
+else()
+	set (BOOST_INCLUDE_DIR ${DEP_LIBRARY_PATH}/boost/include)
+	target_include_directories(${TARGET_NAME} PUBLIC ${BOOST_INCLUDE_DIR} )
 endif()
 
 target_include_directories(${TARGET_NAME} PUBLIC ${RAPIDJSON_INCLUDE_DIR} )

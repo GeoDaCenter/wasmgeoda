@@ -8,7 +8,7 @@
 
 typedef ttmath::Big<TTMATH_BITS(32), TTMATH_BITS(128)> DD;
 
-double constexpr DP_SAFE_EPSILON =  1e-15;
+double DP_SAFE_EPSILON =  1e-15;
 
 enum {
     RIGHT = -1,
