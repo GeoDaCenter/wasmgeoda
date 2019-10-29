@@ -496,13 +496,17 @@ GalElement* PolysToContigWeights(gda::MainMap& main, bool is_queen,
         }
     }
     for (size_t i=0; i<gRecords; ++i) {
-        if (gl[i].Size() == G[i].size()) continue;
+        if (gl[i].Size() == G[i].size()) {
+            gl[i].ReverseNbrs();
+            continue;
+        }
         gl[i].SetSizeNbrs(G[i].size());
         size_t cnt = 0;
         for (set<long>::iterator it=G[i].begin(); it!=G[i].end(); ++it) {
             gl[i].SetNbr(cnt++, *it);
         }
         gl[i].SortNbrs();
+        gl[i].ReverseNbrs();
     }
     
 	return gl;

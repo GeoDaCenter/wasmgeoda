@@ -7,14 +7,16 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <libgeoda.h>
-#include <GeodaWeight.h>
-#include <UniLocalMoran.h>
-#include <UniGeary.h>
-#include <UniG.h>
-#include <UniGstar.h>
-#include <UniJoinCount.h>
-#include <gda_api.h>
+#include "../src/gda_weights.h"
+#include "../src/gda_sa.h"
+#include "../src/geojson.h"
+#include "../src/weights/GeodaWeight.h"
+#include "../src/sa/UniLocalMoran.h"
+#include "../src/sa/UniGeary.h"
+#include "../src/sa/UniGstar.h"
+#include "../src/sa/UniG.h"
+#include "../src/sa/UniJoinCount.h"
+
 
 using namespace testing;
 
@@ -22,11 +24,12 @@ namespace {
 
     // Deprecated in >= 0.0.2
     TEST(LOCALSA_TEST, LISA_UNI) {
-        GeoDa gda("../data/Guerry.shp");
+        std::string file_path = "../data/Guerry.geojson";
+        GdaGeojson gda(file_path);
         GeoDaWeight* w = gda_queen_weights(&gda);
         std::vector<double> data = gda.GetNumericCol("Crm_prp");
 
-        UniLocalMoran* lisa = gda_lisa(w, data);
+        UniLocalMoran* lisa = gda_localmoran(w, data);
 
         std::vector<int> cvals= lisa->GetClusterIndicators();
         std::vector<double> pvals = lisa->GetLocalSignificanceValues();
@@ -47,7 +50,9 @@ namespace {
     }
 
     TEST(LOCALSA_TEST, GEARY_UNI) {
-        GeoDa gda("../data/Guerry.shp");
+        std::string file_path = "../data/Guerry.geojson";
+        GdaGeojson gda(file_path);
+
         GeoDaWeight* w = gda_queen_weights(&gda);
         std::vector<double> data = gda.GetNumericCol("Crm_prp");
 
@@ -72,7 +77,9 @@ namespace {
     }
 
     TEST(LOCALSA_TEST, JOINCOUNT_UNI) {
-        GeoDa gda("../data/columbus.shp");
+        std::string file_path = "../data/Guerry.geojson";
+        GdaGeojson gda(file_path);
+
         GeoDaWeight* w = gda_queen_weights(&gda);
         std::vector<double> data = gda.GetNumericCol("nsa");
 
@@ -97,7 +104,9 @@ namespace {
     }
 
     TEST(LOCALSA_TEST, LOCALG_UNI) {
-        GeoDa gda("../data/Guerry.shp");
+        std::string file_path = "../data/Guerry.geojson";
+        GdaGeojson gda(file_path);
+
         GeoDaWeight* w = gda_queen_weights(&gda);
         std::vector<double> data = gda.GetNumericCol("Crm_prp");
 
@@ -122,7 +131,9 @@ namespace {
     }
 
     TEST(LOCALSA_TEST, LOCALGstar_UNI) {
-        GeoDa gda("../data/Guerry.shp");
+        std::string file_path = "../data/Guerry.geojson";
+        GdaGeojson gda(file_path);
+
         GeoDaWeight* w = gda_queen_weights(&gda);
         std::vector<double> data = gda.GetNumericCol("Crm_prp");
 

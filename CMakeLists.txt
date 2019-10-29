@@ -16,11 +16,24 @@ set(src
 		src/weights/GalWeight.cpp
 		src/weights/GwtWeight.cpp
 		src/weights/PolysToContigWeights.cpp
-		src/weights/PointsToContigWeights.cpp
+		src/weights/VoronoiUtils.cpp
 		src/gda_weights.cpp
+		src/gda_clustering.cpp
+		src/gda_sa.cpp
 		src/GenGeomAlgs.cpp
 		src/SpatialIndAlgs.cpp
 		src/GenUtils.cpp
+		src/sa/LISA.cpp
+		src/sa/UniG.cpp
+		src/sa/UniGstar.cpp
+		src/sa/UniGeary.cpp
+		src/sa/UniJoinCount.cpp
+		src/sa/UniLocalMoran.cpp
+		src/clustering/cluster.cpp
+		src/clustering/maxp.cpp
+		src/clustering/maxp_wrapper.cpp
+		src/clustering/redcap.cpp
+		src/clustering/redcap_wrapper.cpp
 )
 
 set(exports 
@@ -28,6 +41,7 @@ set(exports
 	  _get_num_obs
 	  _get_map_type
 	  _queen_weights
+	  _knn_weights
 )
 
 
@@ -46,7 +60,7 @@ if (USE_EMCC)
 	SET(CMAKE_C_COMPILER /Users/xunli/Downloads/emsdk/fastcomp/emscripten/emcc)
 	SET(CMAKE_CPP_COMPILER /Users/xunli/Downloads/emsdk/fastcomp/emscripten/em++)
 	SET(CMAKE_CXX_COMPILER /Users/xunli/Downloads/emsdk/fastcomp/emscripten/em++)
-	set( CMAKE_CXX_FLAGS "-s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
+	set( CMAKE_CXX_FLAGS "-Os -s TOTAL_MEMORY=181207040 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=8 -s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
 endif()
 
 # specify the project
@@ -77,6 +91,7 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 # Add test cpp file
 set (TEST_SOURCE_FILES ${src}
 		test/test_weights.cpp
+		test/test_clustering.cpp
 )
 add_executable( runUnitTests ${TEST_SOURCE_FILES} )
 

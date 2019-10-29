@@ -66,9 +66,11 @@ namespace {
         delete w;
     }
 
-    /*
     TEST(WEIGHTS_TEST, DIST_CREATE) {
-        GeoDa gda("../data/natregimes.shp");
+        std::string file_path = "../data/natregimes.geojson";
+
+        GdaGeojson gda(file_path);
+
         double min_thres = gda_min_distthreshold(&gda);
 
         EXPECT_DOUBLE_EQ(min_thres, 1.4657759325950015);
@@ -87,7 +89,9 @@ namespace {
     }
 
     TEST(WEIGHTS_TEST, KERNEL_KNN) {
-        GeoDa gda("../data/natregimes.shp");
+        std::string file_path = "../data/natregimes.geojson";
+
+        GdaGeojson gda(file_path);
 
         double power = 1;
         bool is_inverse = false;
@@ -112,5 +116,4 @@ namespace {
 
         delete w;
     }
-     */
 }

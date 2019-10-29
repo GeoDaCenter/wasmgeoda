@@ -1,7 +1,7 @@
 #include <vector>
 #include <set>
 
-#include "weights/PointsToContigWeights.h"
+#include "weights/VoronoiUtils.h"
 #include "weights/PolysToContigWeights.h"
 #include "weights/GalWeight.h"
 #include "weights/GeodaWeight.h"
@@ -33,8 +33,13 @@ GeoDaWeight* contiguity_weights(bool is_queen,
             x[i] = centroids[i].x;
             y[i] = centroids[i].y;
         }
-        gda::PointsToContiguity(x, y, is_queen, nbr_map);
-        poW->gal = Gda::NeighborMapToGal(nbr_map);
+        Gda::VoronoiUtils::PointsToContiguity(x, y, is_queen, nbr_map);
+        poW->gal = Gda::VoronoiUtils::NeighborMapToGal(nbr_map);
+        //gda::PointsToContiguity(x, y, is_queen, nbr_map);
+        //poW->gal = Gda::NeighborMapToGal(nbr_map);
+        if (order > 1) {
+            Gda::MakeHigherOrdContiguity(order, num_obs, poW->gal, include_lower_order);
+        }
 
     } else if (geoda->GetMapType() == gda::POLYGON) {
         std::cout << "contiguity_weights()POLYGON" << precision_threshold << std::endl;
@@ -96,6 +101,50 @@ GeoDaWeight* gda_knn_weights(GdaGeojson* geoda, unsigned int k,
     GwtWeight* poW = SpatialIndAlgs::knn_build(x, y, k, is_arc,
                                                is_mile, is_inverse, power,
                                                kernel, bandwidth, adaptive_bandwidth, use_kernel_diagnals);
+    poW->GetNbrStats();
+    return (GeoDaWeight*)poW;
+}
+
+double gda_min_distthreshold(GdaGeojson* geoda, bool is_arc, bool is_mile)
+{
+    if (geoda == 0) return 0;
+
+    int num_obs = geoda->GetNumObs();
+
+    const std::vector<gda::Point>& centroids = geoda->GetCentroids();
+    std::vector<double> x(num_obs), y(num_obs);
+    for (size_t i=0; i<num_obs; ++i) {
+        x[i] = centroids[i].x;
+        y[i] = centroids[i].y;
+    }
+
+    double max_1nn_dist = SpatialIndAlgs::find_max_1nn_dist(x, y, is_arc, is_mile);
+    return max_1nn_dist;
+}
+
+GeoDaWeight* gda_distance_weights(GdaGeojson* geoda, double dist_thres,
+                                  const std::string& polyid,
+                                  double power,
+                                  bool is_inverse,
+                                  bool is_arc,
+                                  bool is_mile,
+                                  const std::string& kernel,
+                                  bool use_kernel_diagnals)
+{
+    if (geoda == 0) return 0;
+
+    int num_obs = geoda->GetNumObs();
+
+    const std::vector<gda::Point>& centroids = geoda->GetCentroids();
+    std::vector<double> x(num_obs), y(num_obs);
+    for (size_t i=0; i<num_obs; ++i) {
+        x[i] = centroids[i].x;
+        y[i] = centroids[i].y;
+    }
+    dist_thres = dist_thres * 1.00001; //m_thres_delta_factor
+    GwtWeight* poW = SpatialIndAlgs::thresh_build(x, y, dist_thres, power, is_arc, is_mile,
+                                                  kernel, use_kernel_diagnals);
+
     poW->GetNbrStats();
     return (GeoDaWeight*)poW;
 }

@@ -4,3 +4,5 @@ make jsgeoda.html
 
 mv jsgeoda.js ../web/gen/
 mv jsgeoda.wasm ../web/gen/
+mv jsgeoda.worker.js ../web/gen/
+mv jsgeoda.html.mem ../web/gen/

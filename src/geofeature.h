@@ -29,7 +29,7 @@ namespace gda {
 			return (abs(x - p.x) <= precision_threshold &&
 							abs(y - p.y) <= precision_threshold);
 		}
-		double distance(const Point& p) {
+		double distance(const Point& p) const {
 			return sqrt( (x - p.x)*(x-p.x) + (y-p.y)*(y-p.y) );
 		}
 	};

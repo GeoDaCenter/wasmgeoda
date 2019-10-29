@@ -87,11 +87,16 @@ class GeodaProxy {
 		return this.geojson_maps[map_uid];
 	}
 
+	GetNumericCol(map_uid, col_name) {
+		// return VectorDouble
+		return Module.get_numeric_col(map_uid, col_name)
+	}
+
 	CreateQueenWeights(map_uid) {
 
 		const queen_weights = Module.cwrap('queen_weights', 'string', ['string','number','number', 'number']);
-		let sparsity = queen_weights(map_uid, 1, 0, 0.0);
-		return sparsity;
+		let w_uid = queen_weights(map_uid, 1, 0, 0.0);
+		return w_uid;
 	}
 }
 
@@ -105,6 +110,11 @@ function testFunctionBinding() {
 
 Module.onRuntimeInitialized = function() {
 	//testFunctionBinding();
+	var arr = new Float32Array([1.0, 2.0, 0.5]);
+	var vec = new Module.VectorFloat();
+	for (var i = 0; i < arr.length; i++) {
+		vec.push_back(arr[i]);
+	}
 }
 
 // gloal object
@@ -134,12 +144,16 @@ function processGeojson(file) {
 	outtext.value += `Reading file ${file.name} ...\n`;
 	let reader = new FileReader();
 	reader.map_uid = file.name;
+
 	function callback(evt) {
 		let map_uid = evt.target.map_uid;
 		gda_proxy.ReadGeojsonMap(map_uid, evt.target);
 		console.log(gda_proxy.GetNumObs(map_uid));
 		console.log(gda_proxy.GetMapType(map_uid));
-		console.log(gda_proxy.CreateQueenWeights(map_uid));
+		let w_uid = gda_proxy.CreateQueenWeights(map_uid);
+		let data = gda_proxy.GetNumericCol(map_uid, "Crm_prp");
+		let lisa = Module.local_moran(map_uid, w_uid, data);
+		lisa.significances;
 	}
 	reader.onload = callback;
 	reader.readAsArrayBuffer(file);

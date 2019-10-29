@@ -2,8 +2,7 @@
 #define __JSGEODA_CENTROID__
 
 #include <cmath>
-#include "ttmath/ttmathbig.h"
-#include "ttmath/ttmathtypes.h"
+#include "ttmath/ttmath.h"
 #include "../geofeature.h"
 
 typedef ttmath::Big<TTMATH_BITS(32), TTMATH_BITS(128)> DD;
@@ -43,6 +42,158 @@ orientation(double x)
     }
     return STRAIGHT;
 }
+
+class Orientation {
+    public:
+
+    /* A value that indicates an orientation or turn */
+    enum {
+        CLOCKWISE = -1,
+        COLLINEAR = 0,
+        COUNTERCLOCKWISE = 1,
+        RIGHT = -1,
+        LEFT = 1,
+        STRAIGHT = 0
+    };
+
+    static int orientationIndexFilter(const gda::Point& pa, const gda::Point& pb, const gda::Point& pc)
+    {
+        double detsum;
+        double const detleft = (pa.x - pc.x) * (pb.y - pc.y);
+        double const detright = (pa.y - pc.y) * (pb.x - pc.x);
+        double const det = detleft - detright;
+
+        if(detleft > 0.0) {
+            if(detright <= 0.0) {
+                return orientation(det);
+            }
+            else {
+                detsum = detleft + detright;
+            }
+        }
+        else if(detleft < 0.0) {
+            if(detright >= 0.0) {
+                return orientation(det);
+            }
+            else {
+                detsum = -detleft - detright;
+            }
+        }
+        else {
+            return orientation(det);
+        }
+
+        double const errbound = DP_SAFE_EPSILON * detsum;
+        if((det >= errbound) || (-det >= errbound)) {
+            return orientation(det);
+        }
+        return FAILURE;
+    }
+
+    static int index(const gda::Point& p1, const gda::Point& p2, const gda::Point& q)
+    {
+        // fast filter for orientation index
+        // avoids use of slow extended-precision arithmetic in many cases
+        int index = orientationIndexFilter(p1, p2, q);
+        if(index <= 1) {
+            return index;
+        }
+
+        // normalize coordinates
+        DD dx1 = DD(p2.x) + DD(-p1.x);
+        DD dy1 = DD(p2.y) + DD(-p1.y);
+        DD dx2 = DD(q.x) + DD(-p2.x);
+        DD dy2 = DD(q.y) + DD(-p2.y);
+
+        // sign of determinant - inlined for performance
+        DD mx1y2(dx1 * dy2);
+        DD my1x2(dy1 * dx2);
+        DD d = mx1y2 - my1x2;
+        return OrientationDD(d);
+    }
+
+    static bool isCCW(const std::vector<gda::Point>& pts, int start, int end)
+    {
+        // # of points without closing endpoint
+        const std::size_t nPts = end - start + 1;
+
+        if (nPts < 3) return false;
+
+        // find highest point
+        const gda::Point* hiPt = &pts[start];
+        size_t hiIndex = start;
+
+        for(std::size_t i = start+1; i <= end; ++i) {
+            const gda::Point* p = &pts[i];
+            if(p->y > hiPt->y) {
+                hiPt = p;
+                hiIndex = i;
+            }
+        }
+        // find distinct point before highest point
+        auto iPrev = hiIndex;
+        do {
+            if(iPrev == start) {
+                iPrev = end + 1;
+            }
+            iPrev = iPrev - 1;
+        }
+        while(pts[iPrev].equals(hiPt) && iPrev != hiIndex);
+
+        // find distinct point after highest point
+        auto iNext = hiIndex;
+        do {
+            iNext = (iNext + 1 - start) % nPts;
+            iNext = iNext + start;
+        }
+        while(pts[iNext].equals(hiPt) && iNext != hiIndex);
+
+        const gda::Point* prev = &pts[iPrev];
+        const gda::Point* next = &pts[iNext];
+
+        /*
+        * This check catches cases where the ring contains an A-B-A
+        * configuration of points.
+        * This can happen if the ring does not contain 3 distinct points
+        * (including the case where the input array has fewer than 4 elements),
+        * or it contains coincident line segments.
+        */
+
+        if(prev->equals(hiPt) || next->equals(hiPt) || prev->equals(next)) {
+            return false;
+            // MD - don't bother throwing exception,
+            // since this isn't a complete check for ring validity
+            //throw  IllegalArgumentException("degenerate ring (does not contain 3 distinct points)");
+        }
+
+        int disc = Orientation::index(*prev, *hiPt, *next);
+
+        /**
+         *  If disc is exactly 0, lines are collinear.
+         * There are two possible cases:
+         *  (1) the lines lie along the x axis in opposite directions
+         *  (2) the lines lie on top of one another
+         *
+         *  (1) is handled by checking if next is left of prev ==> CCW
+         *  (2) should never happen, so we're going to ignore it!
+         *  (Might want to assert this)
+         */
+        bool isCCW = false;
+
+        if(disc == 0) {
+            // poly is CCW if prev x is right of next x
+            isCCW = (prev->x > next->x);
+        }
+        else {
+            // if area is positive, points are ordered CCW
+            isCCW = (disc > 0);
+        }
+
+        return isCCW;
+    }
+};
+
+
 
 class Centroid {
 
@@ -106,36 +257,36 @@ private:
         areaBasePt.y = basePt.y; 
     }
 
-    void centroid3(gda::Point& p1, gda::Point& p2, gda::Point& p3, gda::Point& c)
+    void centroid3(const gda::Point& p1, const gda::Point& p2, const gda::Point& p3, gda::Point& c)
     {
         c.x = p1.x + p2.x + p3.x;
         c.y = p1.y + p2.y + p3.y;
     }
 
-    double area2(gda::Point& p1, gda::Point& p2, gda::Point& p3)
+    double area2(const gda::Point& p1, const gda::Point& p2, const gda::Point& p3)
     {
         return
             (p2.x - p1.x) * (p3.y - p1.y) -
             (p3.x - p1.x) * (p2.y - p1.y);
     }
 
-    void addPoint(gda::Point& pt)
+    void addPoint(const gda::Point& pt)
     {
         ptCount += 1;
         ptCentSum.x += pt.x;
         ptCentSum.y += pt.y;
     }
 
-    void addHole(gda::PolygonContents* poly, int start, int end)
+    void addHole(const gda::PolygonContents* poly, int start, int end)
     {
-        bool isPositiveArea = isCCW(poly->points, start, end);
+        bool isPositiveArea = Orientation::isCCW(poly->points, start, end);
         for(size_t i = start, e = end - 1; i < e; ++i) {
             addTriangle(areaBasePt, poly->points[i], poly->points[i + 1], isPositiveArea);
         }
         addLineSegments(poly->points, start, end);
     }
 
-    void addTriangle(gda::Point& p0, gda::Point& p1, gda::Point& p2, bool isPositiveArea)
+    void addTriangle(const gda::Point& p0, const gda::Point& p1, const gda::Point& p2, bool isPositiveArea)
     {
         double sign = (isPositiveArea) ? 1.0 : -1.0;
         centroid3(p0, p1, p2, triangleCent3);
@@ -145,7 +296,7 @@ private:
         areasum2 += sign * a2;
     }
 
-    void addLineSegments(std::vector<gda::Point>& pts, int start, int end)
+    void addLineSegments(const std::vector<gda::Point>& pts, int start, int end)
     {
         size_t npts = end - start + 1;
         double lineLen = 0.0;
@@ -164,7 +315,7 @@ private:
         }
         totalLength += lineLen;
         if(lineLen == 0.0 && npts > 0) {
-            addPoint(pts[0]);
+            addPoint(pts[start]);
         }
     }
 
@@ -175,147 +326,12 @@ private:
         if(len > 0) {
             setAreaBasePoint(poly->points[0]);
         }
-        bool isPositiveArea = ! isCCW(poly->points, 0, len-1);
-        for(size_t i = 0; i < len - 1; ++i) {
+        bool isPositiveArea = ! Orientation::isCCW(poly->points, 0, len-1);
+        for(size_t i = 1; i < len - 1; ++i) {
             addTriangle(areaBasePt, poly->points[i], poly->points[i + 1], isPositiveArea);
         }
         addLineSegments(poly->points, 0, len-1);
     }
 
-    bool isCCW(std::vector<gda::Point>& pts, int start, int end) 
-    {
-        // # of points without closing endpoint
-        const std::size_t nPts = end - start + 1; 
-
-        if (nPts < 3) return false;
-
-        // find highest point
-        const gda::Point* hiPt = &pts[start];
-        size_t hiIndex = start;
-
-        for(std::size_t i = start+1; i <= end; ++i) {
-            const gda::Point* p = &pts[i];
-            if(p->y > hiPt->y) {
-                hiPt = p;
-                hiIndex = i;
-            }
-        }
-        // find distinct point before highest point
-        auto iPrev = hiIndex;
-        do {
-            if(iPrev == 0) {
-                iPrev = nPts;
-            }
-            iPrev = iPrev - 1;
-        }
-        while(pts[iPrev].equals(hiPt) && iPrev != hiIndex);
-
-        // find distinct point after highest point
-        auto iNext = hiIndex;
-        do {
-            iNext = (iNext + 1) % nPts;
-        }
-        while(pts[iNext].equals(hiPt) && iNext != hiIndex);
-
-        const gda::Point* prev = &pts[iPrev];
-        const gda::Point* next = &pts[iNext];
-
-        /*
-        * This check catches cases where the ring contains an A-B-A
-        * configuration of points.
-        * This can happen if the ring does not contain 3 distinct points
-        * (including the case where the input array has fewer than 4 elements),
-        * or it contains coincident line segments.
-        */
-
-        if(prev->equals(hiPt) || next->equals(hiPt) || prev->equals(next)) {
-            return false;
-            // MD - don't bother throwing exception,
-            // since this isn't a complete check for ring validity
-            //throw  IllegalArgumentException("degenerate ring (does not contain 3 distinct points)");
-        }
-
-        int disc = orientationIndex(*prev, *hiPt, *next);
-
-        /**
-         *  If disc is exactly 0, lines are collinear.
-         * There are two possible cases:
-         *  (1) the lines lie along the x axis in opposite directions
-         *  (2) the lines lie on top of one another
-         *
-         *  (1) is handled by checking if next is left of prev ==> CCW
-         *  (2) should never happen, so we're going to ignore it!
-         *  (Might want to assert this)
-         */
-        bool isCCW = false;
-
-        if(disc == 0) {
-            // poly is CCW if prev x is right of next x
-            isCCW = (prev->x > next->x);
-        }
-        else {
-            // if area is positive, points are ordered CCW
-            isCCW = (disc > 0);
-        }
-
-        return isCCW;
-    }
-
-    int orientationIndex(const gda::Point& p1, const gda::Point& p2, const gda::Point& q)
-    {
-        // fast filter for orientation index
-        // avoids use of slow extended-precision arithmetic in many cases
-        int index = orientationIndexFilter(p1, p2, q);
-        if(index <= 1) {
-            return index;
-        }
-
-        // normalize coordinates
-        DD dx1 = DD(p2.x) + DD(-p1.x);
-        DD dy1 = DD(p2.y) + DD(-p1.y);
-        DD dx2 = DD(q.x) + DD(-p2.x);
-        DD dy2 = DD(q.y) + DD(-p2.y);
-
-        // sign of determinant - inlined for performance
-        DD mx1y2(dx1 * dy2);
-        DD my1x2(dy1 * dx2);
-        DD d = mx1y2 - my1x2;
-        return OrientationDD(d);
-    }
-
-    int orientationIndexFilter(const gda::Point& pa, const gda::Point& pb, const gda::Point& pc)
-    {
-        double detsum;
-        double const detleft = (pa.x - pc.x) * (pb.y - pc.y);
-        double const detright = (pa.y - pc.y) * (pb.x - pc.x);
-        double const det = detleft - detright;
-
-        if(detleft > 0.0) {
-            if(detright <= 0.0) {
-                return orientation(det);
-            }
-            else {
-                detsum = detleft + detright;
-            }
-        }
-        else if(detleft < 0.0) {
-            if(detright >= 0.0) {
-                return orientation(det);
-            }
-            else {
-                detsum = -detleft - detright;
-            }
-        }
-        else {
-            return orientation(det);
-        }
-
-        double const errbound = DP_SAFE_EPSILON * detsum;
-        if((det >= errbound) || (-det >= errbound)) {
-            return orientation(det);
-        }
-        return FAILURE;
-    }
- 
 };
 #endif

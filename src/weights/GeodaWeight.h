@@ -64,6 +64,7 @@ public:
     double     mean_nbrs;
     double     median_nbrs;
     bool       is_internal_use; // if internally used weights structure, will not be shown and used by users
+    std::string uid;
 };
 
 #endif

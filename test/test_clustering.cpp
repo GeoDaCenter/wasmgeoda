@@ -7,7 +7,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <../src/gda_weights.h>
+#include "../src/gda_weights.h"
+#include "../src/gda_clustering.h"
+#include "../src/geojson.h"
 
 using namespace testing;
 
@@ -16,7 +18,9 @@ namespace {
     const char *col_names[6] = {"Crm_prs", "Crm_prp", "Litercy", "Donatns", "Infants", "Suicids"};
 
     TEST(CLUSTERING_TEST, SKATER) {
-        GeoDa gda("../data/Guerry.shp");
+        std::string file_path = "../data/Guerry.geojson";
+        GdaGeojson gda(file_path);
+
         GeoDaWeight* w = gda_queen_weights(&gda);
         std::vector<std::vector<double> > data;
         for (size_t i=0; i<6; ++i) {
@@ -35,7 +39,9 @@ namespace {
     }
 
     TEST(CLUSTERING_TEST, REDCAP) {
-        GeoDa gda("../data/Guerry.shp");
+        std::string file_path = "../data/Guerry.geojson";
+        GdaGeojson gda(file_path);
+
         GeoDaWeight* w = gda_queen_weights(&gda);
         std::vector<std::vector<double> > data;
         for (size_t i=0; i<6; ++i) {
@@ -54,7 +60,9 @@ namespace {
     }
 
     TEST(CLUSTERING_TEST, MAXP_GREEDY) {
-        GeoDa gda("../data/Guerry.shp");
+        std::string file_path = "../data/Guerry.geojson";
+        GdaGeojson gda(file_path);
+
         GeoDaWeight* w = gda_queen_weights(&gda);
         std::vector<std::vector<double> > data;
         for (size_t i=0; i<6; ++i) {
