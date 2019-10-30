@@ -72,6 +72,8 @@ public:
         return weights_dict[w_uid];
     }
 
+    double GetMinDistanceThreshold(bool is_arc, bool is_mile);
+
 protected:
     gda::MainMap main_map;
 

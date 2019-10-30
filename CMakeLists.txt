@@ -38,10 +38,6 @@ set(src
 
 set(exports 
 	  _print_json
-	  _get_num_obs
-	  _get_map_type
-	  _queen_weights
-	  _knn_weights
 )
 
 
@@ -92,6 +88,7 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 set (TEST_SOURCE_FILES ${src}
 		test/test_weights.cpp
 		test/test_clustering.cpp
+		test/test_localSA.cpp
 )
 add_executable( runUnitTests ${TEST_SOURCE_FILES} )
 

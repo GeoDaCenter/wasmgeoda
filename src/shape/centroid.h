@@ -205,14 +205,14 @@ public:
         ptCount(0)
     {
         // The first element in the array represents the exterior ring. 
-        // Any subsequent elements represent interior rings 
-        addShell(poly);
-
-        if (poly->num_parts > 1) {
-            for (size_t i = 1; i < poly->num_parts; ++i) {
-                int start = poly->parts[i];
-                int end = i+1 < poly->num_parts ? poly->parts[i+1] : poly->num_points;
+        // Any subsequent elements represent interior rings
+        for (size_t p = 0; p < poly->num_parts; ++p) {
+            int start = poly->parts[p];
+            int end = p+1 < poly->num_parts ? poly->parts[p+1] : poly->num_points;
+            if (poly->holes[p]) {
                 addHole(poly, start, end-1);
+            } else {
+                addShell(poly, start, end -1);
             }
         }
     }
@@ -319,18 +319,18 @@ private:
         }
     }
 
-    void addShell(gda::PolygonContents* poly)
+    void addShell(gda::PolygonContents* poly, int start, int end)
     {
         // ext ring
-        size_t len = poly->num_parts > 1 ? poly->parts[1] : poly->num_points;
+        size_t len = end - start + 1;
         if(len > 0) {
-            setAreaBasePoint(poly->points[0]);
+            setAreaBasePoint(poly->points[start]);
         }
-        bool isPositiveArea = ! Orientation::isCCW(poly->points, 0, len-1);
-        for(size_t i = 1; i < len - 1; ++i) {
+        bool isPositiveArea = ! Orientation::isCCW(poly->points, start, end);
+        for(size_t i = start; i < end; ++i) {
             addTriangle(areaBasePt, poly->points[i], poly->points[i + 1], isPositiveArea);
         }
-        addLineSegments(poly->points, 0, len-1);
+        addLineSegments(poly->points, start, end);
     }
 
 };

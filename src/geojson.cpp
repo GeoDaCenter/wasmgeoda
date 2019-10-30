@@ -101,6 +101,12 @@ const std::vector<gda::Point>& GdaGeojson::GetCentroids()
     return this->centroids;
 }
 
+
+double GdaGeojson::GetMinDistanceThreshold(bool is_arc, bool is_mile)
+{
+    return gda_min_distthreshold(this, is_arc, is_mile);
+}
+
 GeoDaWeight* GdaGeojson::CreateQueenWeights(unsigned int order, 
         bool include_lower_order,
  	    double precision_threshold)
@@ -400,7 +406,7 @@ void GdaGeojson::addPolygon(const rapidjson::Value &coords)
     //		[-80.2978363037109,25.9572772979736],[-80.2978515625,25.9739627838135],[-80.1280136108398,25.9771671295166],[-80.1933288574219,25.7596549987793],
     //	]
     //]
-    // it could be multipolygon, e.g. NAT "POLY_ID": 1137, "NAME": "Frederick", "STATE_NAME": "Virginia",
+    // it could be polygon with holes, e.g. NAT "POLY_ID": 1137, "NAME": "Frederick", "STATE_NAME": "Virginia",
     // [
     //	[
     //		[-78.1545867919922,39.0405921936035],[-78.1680374145508,39.0219383239746],[-78.3112487792969,39.0107421875],[-78.3190536499023,39.021484375],[-78.3138656616211,39.0337600708008],
@@ -437,6 +443,7 @@ void GdaGeojson::addPolygon(const rapidjson::Value &coords)
             poly->num_points = xys.Size();
             poly->parts.push_back(0);
             poly->points.resize(xys.Size());
+            poly->holes.push_back(false);
 
             for (size_t i=0; i<xys.Size(); ++i) {
                 const rapidjson::Value &xy = xys[i];
@@ -459,6 +466,8 @@ void GdaGeojson::addPolygon(const rapidjson::Value &coords)
                 const rapidjson::Value &part = parts[i];
                 poly->num_parts += 1;
                 poly->parts.push_back(poly->num_points);
+                bool is_hole = i > 0 ? true : false;
+                poly->holes.push_back(is_hole);
 
                 for (size_t j=0; j< part.Size(); ++j) {
                     const rapidjson::Value& xy = part[j];
@@ -534,6 +543,8 @@ void GdaGeojson::addMultiPolygons(const rapidjson::Value &coords)
 
                 poly->parts.push_back(poly->num_points);
                 poly->num_parts += 1;
+                bool is_hole = sp > 0 ? true : false;
+                poly->holes.push_back(is_hole);
 
                 for (size_t i = 0; i < n_xy; ++i) {
                     const rapidjson::Value &xy = xys[i];

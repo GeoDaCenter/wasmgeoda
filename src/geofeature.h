@@ -93,6 +93,7 @@ namespace gda {
 		int num_parts; // byte 36, LE, the number of rings in the polygon
 		int num_points; // byte 40, LE, total number of points for all rings
 		std::vector<int> parts; // byte 44, array of size num_parts, LE
+		std::vector<bool> holes;
 		// stores the first index in array for each part
 		std::vector<Point> points; // byte 44 + 4*num_parts, array of
 		// size num_parts, LE

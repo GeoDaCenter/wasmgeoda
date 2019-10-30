@@ -70,16 +70,14 @@ class GeodaProxy {
         window.Module._free(uint8_t_ptr);
 
 		// store the map and map type
-		const get_map_type = Module.cwrap('get_map_type', 'number', ['string']);
-		let map_type = get_map_type(map_uid);	
+		let map_type = Module.get_map_type(map_uid);
 		this.geojson_maps[map_uid] = map_type;
 
 		return map_uid;
 	}
 
 	GetNumObs(map_uid) {
-		const get_num_obs = Module.cwrap('get_num_obs', 'number', ['string']);
-		let n = get_num_obs(map_uid);	
+		let n = Module.get_num_obs(map_uid);
 		return n;
 	}
 
@@ -93,9 +91,7 @@ class GeodaProxy {
 	}
 
 	CreateQueenWeights(map_uid) {
-
-		const queen_weights = Module.cwrap('queen_weights', 'string', ['string','number','number', 'number']);
-		let w_uid = queen_weights(map_uid, 1, 0, 0.0);
+		let w_uid = Module.queen_weights(map_uid, 1, 0, 0.0);
 		return w_uid;
 	}
 }

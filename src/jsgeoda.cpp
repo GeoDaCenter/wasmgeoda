@@ -10,6 +10,10 @@
 #include <rapidjson/stringbuffer.h>
 
 #include "sa/UniLocalMoran.h"
+#include "sa/UniG.h"
+#include "sa/UniGstar.h"
+#include "sa/UniGeary.h"
+#include "sa/UniJoinCount.h"
 #include "geojson.h"
 #include "gda_weights.h"
 #include "gda_sa.h"
@@ -55,9 +59,7 @@ void new_geojsonmap(std::string file_name, const int & addr, const size_t & len)
 }
 
 
-extern "C" 
-int get_num_obs(char* _map_uid) {
-	std::string map_uid(_map_uid);
+int get_num_obs(std::string map_uid) {
 	std::cout << "get_num_obs()" << map_uid << std::endl;
 	GdaGeojson *json_map = geojson_maps[map_uid];
 	if (json_map) {
@@ -67,9 +69,7 @@ int get_num_obs(char* _map_uid) {
 }
 
 
-extern "C"
-int get_map_type(char* _map_uid) {
-	std::string map_uid(_map_uid);
+int get_map_type(std::string map_uid) {
 	std::cout << "get_map_type()" << map_uid << std::endl;
 	GdaGeojson *json_map = geojson_maps[map_uid];
 	if (json_map) {
@@ -78,137 +78,89 @@ int get_map_type(char* _map_uid) {
 	return 0;
 }
 
-extern "C" 
-const char* queen_weights(char* _map_uid,
-	int order,
-	int include_lower_order,
- 	float precision_threshold)
+std::string queen_weights(std::string map_uid, int order, int include_lower_order, double precision_threshold)
 {
-	std::string map_uid(_map_uid);
 	std::cout << "queen_weights()" << map_uid << std::endl;
 
 	GdaGeojson *json_map = geojson_maps[map_uid];
 	if (json_map) {
 		GeoDaWeight *w = json_map->CreateQueenWeights(order, include_lower_order, precision_threshold);
-		if (w) return w->uid.c_str();
+		if (w) return w->uid;
 	}
 	return "";
 }
 
-extern "C"
-const char* rook_weights(char* _map_uid,
-                          int order,
-                          int include_lower_order,
-                          float precision_threshold)
+std::string rook_weights(std::string map_uid, int order, int include_lower_order, double precision_threshold)
 {
-    std::string map_uid(_map_uid);
     std::cout << "rook_weights()" << map_uid << std::endl;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         GeoDaWeight *w = json_map->CreateRookWeights(order, include_lower_order, precision_threshold);
-        double sparsity =w->GetSparsity();
-        std::cout << "sparsity:" << sparsity << std::endl;
-        std::stringstream rst;
-        rst << sparsity;
-        return rst.str().c_str();
+        if (w) return w->uid;
     }
     return "";
 }
 
-extern "C"
-const char* knn_weights(char* _map_uid,
-                        unsigned int k,
-                        float power,
-                        bool is_inverse,
-                        bool is_arc,
-                        bool is_mile)
+std::string knn_weights(std::string map_uid, int k, double power, bool is_inverse, bool is_arc, bool is_mile)
 {
-    std::string map_uid(_map_uid);
     std::cout << "knn_weights()" << map_uid << std::endl;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         GeoDaWeight *w = json_map->CreateKnnWeights(k, power, is_inverse, is_arc, is_mile);
-        double sparsity =w->GetSparsity();
-        std::cout << "sparsity:" << sparsity << std::endl;
-        std::stringstream rst;
-        rst << sparsity;
-        return rst.str().c_str();
+        if (w) return w->uid;
     }
     return "";
 }
 
-extern "C"
-const char* dist_weights(char* _map_uid,
-                         float dist_thres,
-                        float power,
-                        bool is_inverse,
-                        bool is_arc,
-                        bool is_mile)
+std::string dist_weights(std::string map_uid, double dist_thres, double power, bool is_inverse, bool is_arc, bool is_mile)
 {
-    std::string map_uid(_map_uid);
     std::cout << "distance_weights()" << map_uid << std::endl;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         GeoDaWeight *w = json_map->CreateDistanceWeights(dist_thres, power, is_inverse, is_arc, is_mile);
-        double sparsity =w->GetSparsity();
-        std::cout << "sparsity:" << sparsity << std::endl;
-        std::stringstream rst;
-        rst << sparsity;
-        return rst.str().c_str();
+        if (w) return w->uid;
     }
     return "";
 }
 
-extern "C"
-const char* kernel_weights(char* _map_uid,
-        unsigned int k,
-        char* kernel,
-        bool adaptive_bandwidth,
-        bool use_kernel_diagonals,
-        bool is_arc,
-        bool is_mile)
+std::string kernel_weights(std::string map_uid, int k, std::string kernel, bool adaptive_bandwidth,
+        bool use_kernel_diagonals, bool is_arc, bool is_mile)
 {
-    std::string map_uid(_map_uid);
     std::cout << "kernel_weights()" << map_uid << std::endl;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         std::string kernel_str(kernel);
         GeoDaWeight *w = json_map->CreateKernelWeights(k, kernel_str, adaptive_bandwidth, use_kernel_diagonals, is_arc, is_mile);
-        double sparsity =w->GetSparsity();
-        std::cout << "sparsity:" << sparsity << std::endl;
-        std::stringstream rst;
-        rst << sparsity;
-        return rst.str().c_str();
+        if (w) return w->uid;
     }
     return "";
 }
 
-extern "C"
-const char* kernel_bandwidth_weights(char* _map_uid,
-                                     float dist_thres,
-                           char* kernel,
-                           bool use_kernel_diagonals,
-                           bool is_arc,
-                           bool is_mile)
+std::string kernel_bandwidth_weights(std::string map_uid, double dist_thres, std::string kernel,
+    bool use_kernel_diagonals, bool is_arc, bool is_mile)
 {
-    std::string map_uid(_map_uid);
     std::cout << "kernel_bandwidth_weights()" << map_uid << std::endl;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         std::string kernel_str(kernel);
         GeoDaWeight *w = json_map->CreateKernelWeights(dist_thres, kernel_str, use_kernel_diagonals, is_arc, is_mile);
-        double sparsity =w->GetSparsity();
-        std::cout << "sparsity:" << sparsity << std::endl;
-        std::stringstream rst;
-        rst << sparsity;
-        return rst.str().c_str();
+        if (w) return w->uid;
     }
     return "";
+}
+
+double get_min_dist_threshold(std::string map_uid, bool is_arc, bool is_mile)
+{
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        return json_map->GetMinDistanceThreshold(is_arc, is_mile);
+    }
+    return 0;
 }
 
 std::vector<double> get_numeric_col(std::string map_uid, std::string col_name) {
@@ -241,8 +193,7 @@ struct LisaResult {
     std::vector<std::string>  get_colors() { return colors;}
 };
 
-LisaResult local_moran(const std::string map_uid,
-        const std::string weight_uid, std::vector<double> values)
+LisaResult local_moran(const std::string map_uid, const std::string weight_uid, std::vector<double> values)
 {
     LisaResult rst;
 
@@ -250,17 +201,112 @@ LisaResult local_moran(const std::string map_uid,
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
-            UniLocalMoran* moran = gda_localmoran(w, values);
-            rst.sig_local_vec = moran->GetLocalSignificanceValues();
-            rst.sig_cat_vec = moran->GetSigCatIndicators();
-            rst.cluster_vec = moran->GetClusterIndicators();
-            delete moran;
+            UniLocalMoran* lisa = gda_localmoran(w, values);
+            rst.sig_local_vec = lisa->GetLocalSignificanceValues();
+            rst.sig_cat_vec = lisa->GetSigCatIndicators();
+            rst.cluster_vec = lisa->GetClusterIndicators();
+            rst.lag_vec = lisa->GetSpatialLagValues();
+            rst.lisa_vec = lisa->GetLISAValues();
+            rst.nn_vec = lisa->GetNumNeighbors();
+            rst.labels = lisa->GetLabels();
+            rst.colors = lisa->GetColors();
+            delete lisa;
         }
     }
-
     return rst;
 }
 
+LisaResult local_g(const std::string map_uid, const std::string weight_uid, std::vector<double> values)
+{
+    LisaResult rst;
+
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GeoDaWeight *w = json_map->GetWeights(weight_uid);
+        if (w) {
+            UniG* lisa = gda_localg(w, values);
+            rst.sig_local_vec = lisa->GetLocalSignificanceValues();
+            rst.sig_cat_vec = lisa->GetSigCatIndicators();
+            rst.cluster_vec = lisa->GetClusterIndicators();
+            rst.lag_vec = lisa->GetSpatialLagValues();
+            rst.lisa_vec = lisa->GetLISAValues();
+            rst.nn_vec = lisa->GetNumNeighbors();
+            rst.labels = lisa->GetLabels();
+            rst.colors = lisa->GetColors();
+            delete lisa;
+        }
+    }
+    return rst;
+}
+
+LisaResult local_gstar(const std::string map_uid, const std::string weight_uid, std::vector<double> values)
+{
+    LisaResult rst;
+
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GeoDaWeight *w = json_map->GetWeights(weight_uid);
+        if (w) {
+            UniGstar* lisa = gda_localgstar(w, values);
+            rst.sig_local_vec = lisa->GetLocalSignificanceValues();
+            rst.sig_cat_vec = lisa->GetSigCatIndicators();
+            rst.cluster_vec = lisa->GetClusterIndicators();
+            rst.lag_vec = lisa->GetSpatialLagValues();
+            rst.lisa_vec = lisa->GetLISAValues();
+            rst.nn_vec = lisa->GetNumNeighbors();
+            rst.labels = lisa->GetLabels();
+            rst.colors = lisa->GetColors();
+            delete lisa;
+        }
+    }
+    return rst;
+}
+
+LisaResult local_geary(const std::string map_uid, const std::string weight_uid, std::vector<double> values)
+{
+    LisaResult rst;
+
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GeoDaWeight *w = json_map->GetWeights(weight_uid);
+        if (w) {
+            UniGeary* lisa = gda_geary(w, values);
+            rst.sig_local_vec = lisa->GetLocalSignificanceValues();
+            rst.sig_cat_vec = lisa->GetSigCatIndicators();
+            rst.cluster_vec = lisa->GetClusterIndicators();
+            rst.lag_vec = lisa->GetSpatialLagValues();
+            rst.lisa_vec = lisa->GetLISAValues();
+            rst.nn_vec = lisa->GetNumNeighbors();
+            rst.labels = lisa->GetLabels();
+            rst.colors = lisa->GetColors();
+            delete lisa;
+        }
+    }
+    return rst;
+}
+
+LisaResult local_joincount(const std::string map_uid, const std::string weight_uid, std::vector<double> values)
+{
+    LisaResult rst;
+
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GeoDaWeight *w = json_map->GetWeights(weight_uid);
+        if (w) {
+            UniJoinCount* lisa = gda_joincount(w, values);
+            rst.sig_local_vec = lisa->GetLocalSignificanceValues();
+            rst.sig_cat_vec = lisa->GetSigCatIndicators();
+            rst.cluster_vec = lisa->GetClusterIndicators();
+            rst.lag_vec = lisa->GetSpatialLagValues();
+            rst.lisa_vec = lisa->GetLISAValues();
+            rst.nn_vec = lisa->GetNumNeighbors();
+            rst.labels = lisa->GetLabels();
+            rst.colors = lisa->GetColors();
+            delete lisa;
+        }
+    }
+    return rst;
+}
 
 #ifdef __JSGEODA__
 //Using this command to compile
@@ -290,8 +336,23 @@ EMSCRIPTEN_BINDINGS(my_module) {
         ;
 
     emscripten::function("new_geojsonmap", &new_geojsonmap);
-    emscripten::function("local_moran", &local_moran);
+    emscripten::function("get_num_obs", &get_num_obs);
+    emscripten::function("get_map_type", &get_map_type);
     emscripten::function("get_numeric_col", &get_numeric_col);
+
+    emscripten::function("min_distance_threshold", &get_min_dist_threshold);
+    emscripten::function("queen_weights", &queen_weights);
+    emscripten::function("rook_weights", &rook_weights);
+    emscripten::function("knn_weights", &knn_weights);
+    emscripten::function("dist_weights", &dist_weights);
+    emscripten::function("kernel_weights", &kernel_weights);
+    emscripten::function("kernel_bandwidth_weights", &kernel_bandwidth_weights);
+
+    emscripten::function("local_moran", &local_moran);
+    emscripten::function("local_g", &local_g);
+    emscripten::function("local_gstar", &local_gstar);
+    emscripten::function("local_geary", &local_geary);
+    emscripten::function("local_joincount", &local_joincount);
 }
 
 int main() {
