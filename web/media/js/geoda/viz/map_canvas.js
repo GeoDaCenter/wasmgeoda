@@ -573,13 +573,11 @@ MapCanvas.prototype = {
     }
     // draw selection rectangle
     ctx.beginPath();
-    ctx.globalAlpha = 1.0;
-    ctx.strokeStyle = "#eeeeee";
+    ctx.strokeStyle = "#000000";
     ctx.rect(startX, startY, w, h);
     ctx.stroke();
     ctx.closePath();
     // restore stroke color
-    ctx.globalAlpha = this.ALPHA;
     ctx.strokeStyle = this.STROKE_CLR;
 
     if (linking) {

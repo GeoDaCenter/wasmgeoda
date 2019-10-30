@@ -14,6 +14,10 @@ body {
   font-size: 10px;
   margin: 0;
   padding: 0;
+  -webkit-user-select: none;
+  -moz-user-select: -moz-none;
+   -ms-user-select: none;
+       user-select: none;
 }
 
 /*override bootstrap*/
@@ -370,8 +374,8 @@ border: 1px solid #aaa;margin: 1px 10px;
   box-shadow: 0 14px 18px rgba(0,0,0,0.5);
   background-repeat: no-repeat;
   background-position: center;
-  -webkit-filter: grayscale(100%) opacity(0.8);
-  filter: grayscale(100%) opacity(0.5);
+  -webkit-filter:  opacity(0.6);
+  filter: opacity(0.6);
 }
 .tool-menu .image-wrap:hover {
   cursor: pointer;
