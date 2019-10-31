@@ -250,7 +250,7 @@ var UIManager = (function(window, csrftoken, $, MsgBox ){
         // update table button
         if (map.uuid) {
           require(['ui/utils'], function(Utils) {
-            $('#btnShowTable').click(function() {
+            $('#btnShowTest').click(function() {
               var url = "../get_table?layer_uuid=" + map.uuid;
               var size = {
                 'width' : 400,

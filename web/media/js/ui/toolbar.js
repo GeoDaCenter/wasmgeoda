@@ -22,7 +22,8 @@ var Toolbar = (function($, FileDlg){
       '#btnShowEdit':'#edit-menu',
       '#btnExplore':'#explore-menu',
       '#btnSpace':'#space-menu',
-      //'#btnSpreg':'#spreg-menu'
+      //'#btnSpreg':'#spreg-menu',
+      '#btnClustering':'#clustering-menu',
     };
 
     var OnToolMenuClick = function(btn, menu) {
@@ -67,8 +68,8 @@ var Toolbar = (function($, FileDlg){
       '#btnKCluster' : '#dlg-kcluster-map',
       '#btnLocalG' : '#dlg-localg-map',
       '#btnParcoords' : '#dlg-parcoords',
-      '#btnPCA' : '#dlg-pca',
-      '#btnKMeans' : '#dlg-kmeans',
+      //'#btnPCA' : '#dlg-pca',
+      //'#btnKMeans' : '#dlg-kmeans',
       //'#btnCarto' : '#dialog-cartodb',
     };
 
@@ -135,7 +136,7 @@ var Toolbar = (function($, FileDlg){
     });
 
     var toolbar_buttons = [
-      '#btnShowTable',
+      '#btnClustering',
       '#btnShowEdit',
       '#btnNewMap',
       '#btnExplore',
@@ -186,7 +187,7 @@ var Toolbar = (function($, FileDlg){
       },
 
       Hide : function() {
-	ToggleButtons(false);
+        ToggleButtons(false);
       },
     };
   };

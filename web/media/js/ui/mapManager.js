@@ -3,6 +3,98 @@
 define(['jquery', 'geoda/io/shapefile', 'geoda/io/shapefile_map','geoda/io/geojson','geoda/io/geojson_map','geoda/viz/map_canvas'],
 function($, ShpReader, ShapeFileMap, GeoJson, GeoJsonMap, MapCanvas) {
 
+  class GeodaProxy {
+    // file_target is evt.target
+    constructor() {
+      this.geojson_maps = {};
+    }
+  
+    ReadGeojsonMap(map_uid, file_target) {
+      //evt.target.result is an ArrayBuffer. In js, 
+          //you can't do anything with an ArrayBuffer 
+          //so we have to ???cast??? it to an Uint8Array
+          const uint8_t_arr = new Uint8Array(file_target.result);
+  
+          //Right now, we have the file as a unit8array in javascript memory. 
+          //As far as I understand, wasm can't directly access javascript memory. 
+          //Which is why we need to allocate special wasm memory and then
+          //copy the file from javascript memory into wasm memory so our wasm functions 
+          //can work on it.
+  
+          //First we need to allocate the wasm memory. 
+          //_malloc returns the address of the new wasm memory as int32.
+          //This call is probably similar to 
+          //uint8_t * ptr = new uint8_t[sizeof(uint8_t_arr)/sizeof(uint8_t_arr[0])]
+          const uint8_t_ptr = window.Module._malloc(uint8_t_arr.length);
+  
+          //Now that we have a block of memory we can copy the file data into that block
+          //This is probably similar to 
+          //std::memcpy(uint8_t_ptr, uint8_t_arr, sizeof(uint8_t_arr)/sizeof(uint8_t_arr[0]))
+          window.Module.HEAPU8.set(uint8_t_arr, uint8_t_ptr);
+  
+          //The only thing that's now left to do is pass 
+          //the address of the wasm memory we just allocated
+          //to our function as well as the size of our memory.
+          window.Module.new_geojsonmap(map_uid, uint8_t_ptr, uint8_t_arr.length);
+  
+          //At this point we're forced to wait until wasm is done with the memory. 
+          //Your site will now freeze if the memory you're working on is big. 
+          //Maybe we can somehow let our wasm function run on a seperate thread and pass a callback?
+  
+          //Retreiving our (modified) memory is also straight forward. 
+          //First we get some javascript memory and then we copy the 
+          //relevant chunk of the wasm memory into our javascript object.
+      //const returnArr = new Uint8Array(uint8_t_arr.length);
+  
+          //If returnArr is std::vector<uint8_t>, then is probably similar to 
+          //returnArr.assign(ptr, ptr + dataSize)
+          //returnArr.set(window.Module.HEAPU8.subarray(uint8_t_ptr, uint8_t_ptr + uint8_t_arr.length));
+  
+          //Lastly, according to the docs, we should call ._free here.
+          //Do we need to call the gc somehow?
+          window.Module._free(uint8_t_ptr);
+  
+      // store the map and map type
+      let map_type = Module.get_map_type(map_uid);
+      this.geojson_maps[map_uid] = map_type;
+  
+      return map_uid;
+    }
+  
+    GetNumObs(map_uid) {
+      let n = Module.get_num_obs(map_uid);
+      return n;
+    }
+  
+    GetMapType(map_uid) {
+      return this.geojson_maps[map_uid];
+    }
+  
+    GetNumericCol(map_uid, col_name) {
+      // return VectorDouble
+      return Module.get_numeric_col(map_uid, col_name)
+    }
+  
+    CreateRookWeights(map_uid, order, include_lower_order, precision) {
+      let w_uid = Module.rook_weights(map_uid, order, include_lower_order, precision);
+      return w_uid;
+    }
+
+    CreateQueenWeights(map_uid, order, include_lower_order, precision) {
+      let w_uid = Module.queen_weights(map_uid, order, include_lower_order, precision);
+      return w_uid;
+    }
+
+    GetMinDistThreshold(map_uid, is_arc, is_mile) {
+      let val = Module.min_distance_threshold(map_uid, is_arc, is_mile);
+      return val;
+    }
+
+    local_moran(map_uid, weight_uid, col_name) {
+      return Module.local_moran(map_uid, weight_uid, col_name);
+    }
+  }
+
 var Manager = (function(window){
 
   var instance;
@@ -19,6 +111,8 @@ var Manager = (function(window){
     var numMaps = 0;
     var mapCanvasList = [];
     var mapOrder= [];
+
+    var geoda_dict = {};
 
     var layerColors = ['#006400','#FFCC33','#CC6699','#95CAE4','#993333','#279B61'];
     var uuid = null;
@@ -231,6 +325,21 @@ var Manager = (function(window){
 
     return {
       // public
+      AddGeoDa : function(map_uid, bytes_data) {
+        var gda_proxy = new GeodaProxy();
+        gda_proxy.ReadGeojsonMap(map_uid, bytes_data);
+        geoda_dict[map_uid]  = gda_proxy;
+        //console.log(gda_proxy.GetNumObs(map_uid));
+            //console.log(gda_proxy.GetMapType(map_uid));
+            //let w_uid = gda_proxy.CreateQueenWeights(map_uid);
+            //let data = gda_proxy.GetNumericCol(map_uid, "hr60");
+            //let lisa = Module.local_moran(map_uid, w_uid, data);
+            //console.log(lisa.significances().get(0));
+      }, 
+
+      GetGeoDa : function(map_uid) {
+        return geoda_dict[map_uid];
+      },
 
       AddMap : function(data, callback) {
         if (data.file_type === 'shp') {
