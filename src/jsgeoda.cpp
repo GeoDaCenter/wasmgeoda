@@ -17,6 +17,7 @@
 #include "geojson.h"
 #include "gda_weights.h"
 #include "gda_sa.h"
+#include "gda_clustering.h"
 
 extern "C" {
 	void print_json(char* content);
@@ -239,6 +240,18 @@ struct LisaResult {
     std::vector<std::string>  get_colors() { return colors;}
 };
 
+void set_lisa_content(LISA* lisa, LisaResult& rst)
+{
+    rst.sig_local_vec = lisa->GetLocalSignificanceValues();
+    rst.sig_cat_vec = lisa->GetSigCatIndicators();
+    rst.cluster_vec = lisa->GetClusterIndicators();
+    rst.lag_vec = lisa->GetSpatialLagValues();
+    rst.lisa_vec = lisa->GetLISAValues();
+    rst.nn_vec = lisa->GetNumNeighbors();
+    rst.labels = lisa->GetLabels();
+    rst.colors = lisa->GetColors();
+}
+
 LisaResult local_moran(const std::string map_uid, const std::string weight_uid, std::string col_name)
 {
     LisaResult rst;
@@ -249,21 +262,14 @@ LisaResult local_moran(const std::string map_uid, const std::string weight_uid, 
         if (w) {
             std::vector<double> values = json_map->GetNumericCol(col_name);
             UniLocalMoran* lisa = gda_localmoran(w, values);
-            rst.sig_local_vec = lisa->GetLocalSignificanceValues();
-            rst.sig_cat_vec = lisa->GetSigCatIndicators();
-            rst.cluster_vec = lisa->GetClusterIndicators();
-            rst.lag_vec = lisa->GetSpatialLagValues();
-            rst.lisa_vec = lisa->GetLISAValues();
-            rst.nn_vec = lisa->GetNumNeighbors();
-            rst.labels = lisa->GetLabels();
-            rst.colors = lisa->GetColors();
+            set_lisa_content(lisa, rst);
             delete lisa;
         }
     }
     return rst;
 }
 
-LisaResult local_g(const std::string map_uid, const std::string weight_uid, std::vector<double> values)
+LisaResult local_g(const std::string map_uid, const std::string weight_uid, std::string col_name)
 {
     LisaResult rst;
 
@@ -271,22 +277,16 @@ LisaResult local_g(const std::string map_uid, const std::string weight_uid, std:
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
+            std::vector<double> values = json_map->GetNumericCol(col_name);
             UniG* lisa = gda_localg(w, values);
-            rst.sig_local_vec = lisa->GetLocalSignificanceValues();
-            rst.sig_cat_vec = lisa->GetSigCatIndicators();
-            rst.cluster_vec = lisa->GetClusterIndicators();
-            rst.lag_vec = lisa->GetSpatialLagValues();
-            rst.lisa_vec = lisa->GetLISAValues();
-            rst.nn_vec = lisa->GetNumNeighbors();
-            rst.labels = lisa->GetLabels();
-            rst.colors = lisa->GetColors();
+            set_lisa_content(lisa, rst);
             delete lisa;
         }
     }
     return rst;
 }
 
-LisaResult local_gstar(const std::string map_uid, const std::string weight_uid, std::vector<double> values)
+LisaResult local_gstar(const std::string map_uid, const std::string weight_uid, std::string col_name)
 {
     LisaResult rst;
 
@@ -294,22 +294,16 @@ LisaResult local_gstar(const std::string map_uid, const std::string weight_uid, 
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
+            std::vector<double> values = json_map->GetNumericCol(col_name);
             UniGstar* lisa = gda_localgstar(w, values);
-            rst.sig_local_vec = lisa->GetLocalSignificanceValues();
-            rst.sig_cat_vec = lisa->GetSigCatIndicators();
-            rst.cluster_vec = lisa->GetClusterIndicators();
-            rst.lag_vec = lisa->GetSpatialLagValues();
-            rst.lisa_vec = lisa->GetLISAValues();
-            rst.nn_vec = lisa->GetNumNeighbors();
-            rst.labels = lisa->GetLabels();
-            rst.colors = lisa->GetColors();
+            set_lisa_content(lisa, rst);
             delete lisa;
         }
     }
     return rst;
 }
 
-LisaResult local_geary(const std::string map_uid, const std::string weight_uid, std::vector<double> values)
+LisaResult local_geary(const std::string map_uid, const std::string weight_uid, std::string col_name)
 {
     LisaResult rst;
 
@@ -317,22 +311,16 @@ LisaResult local_geary(const std::string map_uid, const std::string weight_uid, 
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
+            std::vector<double> values = json_map->GetNumericCol(col_name);
             UniGeary* lisa = gda_geary(w, values);
-            rst.sig_local_vec = lisa->GetLocalSignificanceValues();
-            rst.sig_cat_vec = lisa->GetSigCatIndicators();
-            rst.cluster_vec = lisa->GetClusterIndicators();
-            rst.lag_vec = lisa->GetSpatialLagValues();
-            rst.lisa_vec = lisa->GetLISAValues();
-            rst.nn_vec = lisa->GetNumNeighbors();
-            rst.labels = lisa->GetLabels();
-            rst.colors = lisa->GetColors();
+            set_lisa_content(lisa, rst);
             delete lisa;
         }
     }
     return rst;
 }
 
-LisaResult local_joincount(const std::string map_uid, const std::string weight_uid, std::vector<double> values)
+LisaResult local_joincount(const std::string map_uid, const std::string weight_uid, std::string col_name)
 {
     LisaResult rst;
 
@@ -340,19 +328,46 @@ LisaResult local_joincount(const std::string map_uid, const std::string weight_u
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
+            std::vector<double> values = json_map->GetNumericCol(col_name);
             UniJoinCount* lisa = gda_joincount(w, values);
-            rst.sig_local_vec = lisa->GetLocalSignificanceValues();
-            rst.sig_cat_vec = lisa->GetSigCatIndicators();
-            rst.cluster_vec = lisa->GetClusterIndicators();
-            rst.lag_vec = lisa->GetSpatialLagValues();
-            rst.lisa_vec = lisa->GetLISAValues();
-            rst.nn_vec = lisa->GetNumNeighbors();
-            rst.labels = lisa->GetLabels();
-            rst.colors = lisa->GetColors();
+            set_lisa_content(lisa, rst);
             delete lisa;
         }
     }
     return rst;
+}
+
+std::vector<std::vector<int> > skater(const std::string map_uid, const std::string weight_uid,
+        int k, std::vector<std::string> sel_names, std::string bound_var, double min_bound) {
+    std::cout << "skater(), k=" << k << ":" << bound_var << ":" << min_bound << std::endl;
+
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GeoDaWeight *w = json_map->GetWeights(weight_uid);
+        if (w) {
+            std::vector<std::vector<double> > data;
+            for (size_t i=0; i<sel_names.size(); ++i) {
+                std::cout << sel_names[i];
+                std::vector<double> vals = json_map->GetNumericCol(sel_names[i]);
+                for (size_t j = 0; j < vals.size(); ++j) {
+                    std::cout << vals[j] << std::endl;
+                }
+                data.push_back(vals);
+            }
+            if ( min_bound == -1) {
+                std::vector<std::vector<int> > clst = gda_skater(k, w, data);
+                double totalss = gda_totalsumofsquare(data);
+                double withinss = gda_withinsumofsquare(clst, data);
+                double ratio = (totalss - withinss) / totalss;
+                std::cout << ratio << std::endl;
+                return clst;
+            } else {
+                std::vector<double> bound_vals = json_map->GetNumericCol(bound_var);
+                return gda_skater(k, w, data, "euclidean", bound_vals, min_bound);
+            }
+        }
+    }
+    return std::vector<std::vector<int> >();
 }
 
 #ifdef __JSGEODA__
@@ -364,6 +379,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
 
     emscripten::register_vector<std::string>("VectorString");
     emscripten::register_vector<int>("VectorInt");
+    emscripten::register_vector<std::vector<int>>("VecVecInt");
     //emscripten::register_vector<std::string>("VectorString");
     emscripten::register_vector<float>("VectorFloat");
     //emscripten::register_vector<float>("vector<float>");
@@ -413,13 +429,25 @@ EMSCRIPTEN_BINDINGS(my_module) {
     emscripten::function("local_gstar", &local_gstar);
     emscripten::function("local_geary", &local_geary);
     emscripten::function("local_joincount", &local_joincount);
+
+    emscripten::function("skater", &skater);
 }
 
 int main() {
+    /*
     std::cout << "print_json" << std::endl;
-	return 0;
+    std::string file_path = "../data/Guerry.geojson";
+    GdaGeojson gda(file_path);
+    geojson_maps["Guerry.geojson"] = &gda;
+    WeightsResult r = queen_weights("Guerry.geojson",1,0,0);
+    std::vector<std::string> col_names = {"Crm_prs", "Crm_prp", "Litercy", "Donatns", "Infants", "Suicids"};
+    std::vector<std::vector<int> > clt = skater("Guerry.geojson", r.uid, 4, col_names, "", -1);
+    */
+    return 0;
 }
+
 #endif
+
 
 void print_json(char* content) {
 	std::cout << "print_json" << std::endl;

@@ -68,6 +68,8 @@ var Toolbar = (function($, FileDlg){
       '#btnKCluster' : '#dlg-kcluster-map',
       '#btnLocalG' : '#dlg-localg-map',
       '#btnParcoords' : '#dlg-parcoords',
+      '#btnLocalGeary' : '#dlg-localgeary-map',
+      '#btnLocalJoinCount' : '#dlg-localjc-map',
       //'#btnPCA' : '#dlg-pca',
       //'#btnKMeans' : '#dlg-kmeans',
       //'#btnCarto' : '#dialog-cartodb',

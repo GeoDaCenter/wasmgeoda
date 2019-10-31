@@ -77,7 +77,7 @@ namespace {
     }
 
     TEST(LOCALSA_TEST, JOINCOUNT_UNI) {
-        std::string file_path = "../data/Guerry.geojson";
+        std::string file_path = "../data/Columbus.geojson";
         GdaGeojson gda(file_path);
 
         GeoDaWeight* w = gda_queen_weights(&gda);

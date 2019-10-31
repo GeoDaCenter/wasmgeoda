@@ -127,13 +127,17 @@ var OpenFileDlg = (function() {
           'ui/networkDlg', 'ui/scatterDlg', 'ui/spacetimeDlg',
           'ui/spregDlg', 'ui/weightsDlg', 'ui/scattermatrixDlg',
           'ui/parcoordsDlg', 'ui/boxplotDlg', 'ui/kclusterDlg',
-          'ui/localGDlg', 'ui/pcaDlg', 'ui/kmeansDlg'],
+          'ui/localGDlg', 'ui/pcaDlg', 'ui/kmeansDlg',
+          'ui/localgearyDlg', 'ui/localjoincountDlg',
+          'ui/redcapDlg', 'ui/maxpDlg'],
         function(FileDlg, CartoDlg, ChoroplethDlg,
             HistogramDlg, LisaDlg, MoranDlg,
             NetworkDlg, ScatterDlg, SpacetimeDlg,
             SpregDlg, WeightsDlg, ScatterMatrixDlg,
             ParcoordsDlg, BoxplotDlg, KClusterDlg,
-            LocalGDlg, PCADlg, KMeansDlg)
+            LocalGDlg, PCADlg, KMeansDlg,
+            LocalGearyDlg, LocalJoinCountDlg,
+            RedcapDlg, MaxpDlg)
         {
           var fileDlg = FileDlg.getInstance();
           var cartoDlg = CartoDlg.getInstance();
@@ -153,13 +157,19 @@ var OpenFileDlg = (function() {
           var localgDlg = LocalGDlg.getInstance();
           var pcaDlg = PCADlg.getInstance();
           var kmeansDlg = KMeansDlg.getInstance();
+          var localgearyDlg = LocalGearyDlg.getInstance();
+          var localjoincountDlg = LocalJoinCountDlg.getInstance();
+          var redcapDlg = RedcapDlg.getInstance();
+          var maxpDlg = MaxpDlg.getInstance();
 
           ui.RegistDialogs([fileDlg, cartoDlg, choroDlg,
             histoDlg, lisaDlg, moranDlg,
             netwDlg, scatDlg, spacetimeDlg,
             spregDlg, wDlg, scatMatrixDlg,
             parcoordsDlg, boxplotDlg, kclusterDlg,
-            localgDlg, pcaDlg, kmeansDlg]);
+            localgDlg, pcaDlg, kmeansDlg,
+            localgearyDlg, localjoincountDlg,
+            redcapDlg, maxpDlg]);
 
           // Init dialog with Fields from server
           if (callback) {

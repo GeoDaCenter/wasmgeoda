@@ -252,6 +252,7 @@ GeoDaWeight* GdaGeojson::CreateKernelWeights(unsigned int k,
 std::vector<double> GdaGeojson::GetNumericCol(std::string col_name)
 {
     if (data_numeric.find(col_name) == data_numeric.end()) {
+        std::cout << "not found col" <<std::endl;
         return std::vector<double>();
     }
     return data_numeric[col_name];

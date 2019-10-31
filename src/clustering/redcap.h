@@ -27,6 +27,7 @@
 #include <float.h>
 #include <boost/unordered_map.hpp>
 #include <boost/heap/priority_queue.hpp>
+#include <queue>
 #include <boost/graph/adjacency_list.hpp>
 
 #include "../weights/GalWeight.h"
@@ -38,6 +39,7 @@
 #endif
 
 using namespace std;
+using namespace boost;
 
 namespace SpanningTreeClustering {
     
@@ -152,24 +154,6 @@ namespace SpanningTreeClustering {
         Edge(Node* a, Node* b, double length);
         ~Edge() {}
         
-        bool operator<(const Edge & b) //(1)
-        {
-            if (length < b.length) {
-                return true;
-            } else if (length > b.length ) {
-                return false;
-            } else if (orig->id < b.orig->id) {
-                return true;
-            } else if (orig->id > b.orig->id) {
-                return false;
-            } else if (dest->id < b.dest->id) {
-                return true;
-            } else if (dest->id > b.dest->id) {
-                return false;
-            }
-            return true;
-        }
-
         Node* orig;
         Node* dest;
         double length; // legnth of the edge |a.val - b.val|
@@ -248,7 +232,7 @@ namespace SpanningTreeClustering {
         }
     };
     
-    typedef boost::heap::priority_queue<Tree*, boost::heap::compare<CompareTree> > PriorityQueue;
+    typedef std::priority_queue<Tree*, std::vector<Tree*>, CompareTree> PriorityQueue;
     
     class AbstractClusterFactory
     {
@@ -299,12 +283,12 @@ namespace SpanningTreeClustering {
     // 1 Skater
     //
     ////////////////////////////////////////////////////////////////////////////////
-    typedef boost::adjacency_list <
-    boost::vecS,
-    boost::vecS,
-    boost::undirectedS,
+    typedef adjacency_list <
+    vecS,
+    vecS,
+    undirectedS,
     boost::no_property,         //VertexProperties
-    boost::property < boost::edge_weight_t, double>   //EdgeProperties
+    property < edge_weight_t, double>   //EdgeProperties
     > Graph;
     
     class Skater : public AbstractClusterFactory

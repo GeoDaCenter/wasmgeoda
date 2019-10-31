@@ -57,7 +57,6 @@ var LisaDlg = (function($){
         map.fields['lisa_p'] = 'double';
         UIManager.getInstance().UpdateFieldNames(map.fields);
         mapCanvas.update();
-        //MsgBox.getInstance().Show("Information", "The LISA results have been saved to the CartoDB table.");
       });
     }
 

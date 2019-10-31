@@ -26,6 +26,7 @@
 #include <iterator>
 #include <cstdlib>
 #include <stack>
+#include <iostream>
 #include <boost/unordered_map.hpp>
 #include <boost/graph/prim_minimum_spanning_tree.hpp>
 
@@ -231,10 +232,11 @@ Tree::Tree(vector<int> _ordered_ids, vector<Edge*> _edges, AbstractClusterFactor
             nbr_dict[o_id].push_back(d_id);
             nbr_dict[d_id].push_back(o_id);
         }
-        
         if (size < 1000) {
+            std::cout << "Tree()a" << std::endl;
             Partition(0, od_array.size()-1, ordered_ids, od_array, nbr_dict);
         } else {
+            std::cout << "Tree()b" << std::endl;
             run_threads(ordered_ids, od_array, nbr_dict);
         }
         if (!split_cands.empty()) {
@@ -383,9 +385,9 @@ void Tree::Partition(int start, int end, vector<int>& ids,
         split_cands.push_back(ss);
         mutex.unlock();
 #else
-        pthread_mutex_lock(&lock);
+        //pthread_mutex_lock(&lock);
         split_cands.push_back(ss);
-        pthread_mutex_unlock(&lock);
+        //pthread_mutex_unlock(&lock);
 #endif
     }
 }
@@ -435,7 +437,7 @@ pair<Tree*, Tree*> Tree::GetSubTrees()
     int size = this->split_ids.size();
     vector<int> part1_ids(this->split_pos);
     vector<int> part2_ids(size -this->split_pos);
-    
+
     int max_id = -1;
     for (int i=0; i<size; i++) {
         if (i <split_pos) {
@@ -473,7 +475,7 @@ pair<Tree*, Tree*> Tree::GetSubTrees()
         }
     }
 
-    
+
     Tree* left_tree = new Tree(part1_ids, part1_edges, cluster);
     Tree* right_tree = new Tree(part2_ids, part2_edges, cluster);
     subtrees.first = left_tree;
@@ -559,17 +561,14 @@ void AbstractClusterFactory::Partitioning(int k)
     
     while (!sub_trees.empty() && sub_trees.size() < k) {
         Tree* tmp_tree = sub_trees.top();
-        //cout << tmp_tree->ssd_reduce << endl;
         sub_trees.pop();
-        
         if (tmp_tree->ssd == 0) {
             not_split_trees.push_back(tmp_tree);
             k = k -1;
             continue;
         }
-        
         pair<Tree*, Tree*> children = tmp_tree->GetSubTrees();
-       
+
         Tree* left_tree = children.first;
         Tree* right_tree = children.second;
     
@@ -578,14 +577,14 @@ void AbstractClusterFactory::Partitioning(int k)
             k = k -1;
             continue;
         }
-        
+
         if (left_tree) {
             sub_trees.push(left_tree);
         }
         if (right_tree) {
             sub_trees.push(right_tree);
         }
-        
+
         //delete tmp_tree;
     }
   
@@ -594,14 +593,20 @@ void AbstractClusterFactory::Partitioning(int k)
     for (int i = 0; i< not_split_trees.size(); i++) {
         sub_trees.push(not_split_trees[i]);
     }
-    
+
+    /*
     PriorityQueue::iterator begin = sub_trees.begin();
     PriorityQueue::iterator end = sub_trees.end();
-    boost::unordered_map<int, bool>::iterator node_it;
-   
+
     for (PriorityQueue::iterator it = begin; it != end; ++it) {
         Tree* tmp_tree = *it;
         cluster_ids.push_back(tmp_tree->ordered_ids);
+    }
+    */
+    while(!sub_trees.empty()) {
+        Tree* tmp_tree = sub_trees.top();
+        cluster_ids.push_back(tmp_tree->ordered_ids);
+        sub_trees.pop();
     }
     
     for (int i = 0; i< not_split_trees.size(); i++) {

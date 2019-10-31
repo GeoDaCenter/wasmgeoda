@@ -93,6 +93,40 @@ function($, ShpReader, ShapeFileMap, GeoJson, GeoJsonMap, MapCanvas) {
     local_moran(map_uid, weight_uid, col_name) {
       return Module.local_moran(map_uid, weight_uid, col_name);
     }
+
+    local_g(map_uid, weight_uid, col_name) {
+      return Module.local_g(map_uid, weight_uid, col_name);
+    }
+
+    local_gstar(map_uid, weight_uid, col_name) {
+      return Module.local_gstar(map_uid, weight_uid, col_name);
+    }
+
+    local_geary(map_uid, weight_uid, col_name) {
+      return Module.local_geary(map_uid, weight_uid, col_name);
+    }
+
+    local_joincount(map_uid, weight_uid, col_name) {
+      return Module.local_joincount(map_uid, weight_uid, col_name);
+    }
+
+    skater(map_uid, weight_uid, k, sel_fields, bound_var, min_bound) {
+      let col_names = new Module.VectorString();
+      for (let i=0; i<sel_fields.length; ++i) {
+        col_names.push_back(sel_fields[i]);
+      }
+      let clusters_vec = Module.skater(map_uid, weight_uid, k, col_names, bound_var, min_bound);
+      let clusters = []; 
+      for (let i=0; i<clusters_vec.size(); ++i) {
+        let ids = [];
+        let clst_vec = clusters_vec.get(i);
+        for (let j=0; j<clst_vec.size(); ++j) {
+          ids.push( clst_vec.get(j) );
+        }
+        clusters.push(ids);
+      }
+      return clusters;
+    }
   }
 
 var Manager = (function(window){

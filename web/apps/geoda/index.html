@@ -435,23 +435,42 @@
   //  KCluster Map
   ///////////////////////////////////////////////////////////////////////////////
   -->
-  <div class="mainDlg"  id="dlg-kcluster-map" title="Create KCluster Map">
-    <table width="90%">
-    <tr>
-      <td width="100px"><label for="name">Select weights:</label></td>
-      <td></td>
-    </tr>
-   </table>
-    <div id='kcluster-weights-plugin'></div>
-    <table width="90%">
-    <tr>
-      <td width="100px" style="vertical-align:top"><label for="name">Select variables:</label></td>
-      <td width="200px"><div id="kcluster-sels" class="left_al scroll_v_div"></div></td>
-    </tr>
+  <div class="mainDlg"  id="dlg-kcluster-map" title="SKATER">
+    <table >
+		<tr>
+			<td width="150px"><label for="name">Number of Cluster:</label></td>
+			<td><input type="text" id="input-skater-k" value="4"></td>
+		</tr>
+		<tr>
+			<td width="150px"><label for="name">Select Weights:</label></td>
+			<td><div id='skater-weights-plugin'></div></td>
+		</tr>
+		<tr>
+			<td width="150px" style="vertical-align:top"><label for="name">Minimum Bound:</label></td>
+			<td>
+				<input type="checkbox" id="chk-skater-mbound" id=0>
+				<select id="sel-skater-bound-var" style="width: 120px;"></select>
+				<input type="text" id="input-skater-mbound" style="width: 100px;">
+				<br/>
+				<table>
+					<tr>
+						<td>
+							<div id="slider-skater-bound" style="width:140px;"></div>
+						</td>
+						<td>
+							<input type="text" id="input-skater-mbound-pct" value="10%" style="width: 100px;">
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<td width="150px" style="vertical-align:top"><label for="name">Select Variables:</label></td>
+			<td><div id="skater-sels" class="left_al scroll_v_div"></div></td>
+		</tr>
     </table>
     <br/>
-    <div class="gda-prg-bar" id="progress_bar_kcluster"><img src="../../media/img/progress-bar.gif"></div>
-
+    <div class="gda-prg-bar" id="progress_bar_skater"><img src="../../media/img/progress-bar.gif"></div>
   </div>
 
   <!--
@@ -459,30 +478,83 @@
   //  LocalG Map
   ///////////////////////////////////////////////////////////////////////////////
   -->
-  <div class="mainDlg"  id="dlg-localg-map" title="Create Local Geary Map">
-    <br/>
-    <div class="gda-prg-bar" id="progress_bar_localg"><img src="../../media/img/progress-bar.gif"></div>
-    <table width="90%">
-    <tr>
-      <td width="100px"><label for="name">Select weights:</label></td>
-      <td></td>
-    </tr>
+  <div class="mainDlg"  id="dlg-localg-map" title="Local Getis-Ord">
+    <br><br>
+    <table>
+		<tr>
+			<td width="200"><label for="name">Select a variable:</label></td>
+			<td><select id="sel-localg-var"></td>
+		</tr>
+		<tr>
+			<td ><label for="name">Select p-value threshold:</label></td>
+			<td ><select id="localg-pval-sels"><option value=0.05>0.05</option><option value=0.01>0.01</option><option value=0.001>0.001</option></select></td>
+		</tr>
+		<tr>
+			<td width="200"><label for="name">Select weights:</label></td>
+			<td><div id='localg-weights-plugin'></div></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td><input type="checkbox" id="chk-local-gstar" id=0>Calculates the Getis-Ord Gi* statistic?
+			</td>
+		</tr>
    </table>
-    <div id='localg-weights-plugin'></div>
-    <table width="90%">
-    <tr>
-	<td width="150px" style="vertical-align:top"><label for="name">Select p-value threshold:</label></td>
-      <td width="80px"><select id="localg-pval-sels"><option value=0.05>0.05</option><option value=0.01>0.01</option><option value=0.001>0.001</option></select></td>
-    </tr>
-    </table>
-    <table width="90%">
-    <tr>
-      <td width="100px" style="vertical-align:top"><label for="name">Select variables:</label></td>
-      <td width="200px"><div id="localg-sels" class="left_al scroll_v_div"></div></td>
-    </tr>
-    </table>
-    <br/>
+   <br/>
+   <br/>
+   <div class="gda-prg-bar" id="progress_bar_localg"><img src="../../media/img/progress-bar.gif"></div>
   </div>
+
+  <!--
+///////////////////////////////////////////////////////////////////////////////
+//  Local Geary Map
+///////////////////////////////////////////////////////////////////////////////
+-->
+<div class="mainDlg"  id="dlg-localgeary-map" title="Local Geary">
+	<br><br>
+	<table>
+		<tr>
+			<td width="200"><label for="name">Select a variable:</label></td>
+			<td><select id="sel-localgeary-var"></td>
+		</tr>
+		<tr>
+			<td ><label for="name">Select p-value threshold:</label></td>
+			<td ><select id="localgeary-pval-sels"><option value=0.05>0.05</option><option value=0.01>0.01</option><option value=0.001>0.001</option></select></td>
+		</tr>
+		<tr>
+			<td width="200"><label for="name">Select weights:</label></td>
+			<td><div id='localgeary-weights-plugin'></div></td>
+		</tr>
+	</table>
+	<br/>
+	<br/>
+	<div class="gda-prg-bar" id="progress_bar_localg"><img src="../../media/img/progress-bar.gif"></div>
+</div>
+
+<!--
+///////////////////////////////////////////////////////////////////////////////
+//  Local Join Count Map
+///////////////////////////////////////////////////////////////////////////////
+-->
+<div class="mainDlg"  id="dlg-localjc-map" title="Local Join Count">
+	<br><br>
+	<table>
+		<tr>
+			<td width="200"><label for="name">Select a variable:</label></td>
+			<td><select id="sel-localjc-var"></td>
+		</tr>
+		<tr>
+			<td ><label for="name">Select p-value threshold:</label></td>
+			<td ><select id="localjc-pval-sels"><option value=0.05>0.05</option><option value=0.01>0.01</option><option value=0.001>0.001</option></select></td>
+		</tr>
+		<tr>
+			<td width="200"><label for="name">Select weights:</label></td>
+			<td><div id='localjc-weights-plugin'></div></td>
+		</tr>
+	</table>
+	<br/>
+	<br/>
+	<div class="gda-prg-bar" id="progress_bar_localg"><img src="../../media/img/progress-bar.gif"></div>
+</div>
 
   <!--
   ///////////////////////////////////////////////////////////////////////////////
