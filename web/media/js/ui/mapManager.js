@@ -90,6 +90,26 @@ function($, ShpReader, ShapeFileMap, GeoJson, GeoJsonMap, MapCanvas) {
       return val;
     }
 
+    CreateKnnWeights(map_uid, k, power, is_inverse, is_arc, is_mile) {
+      let w = Module.knn_weights(map_uid, k, power, is_inverse, is_arc, is_mile);
+      return w;
+    }
+
+    CreateDistWeights(map_uid, dist_thres, power, is_inverse, is_arc, is_mile) {
+      let w = Module.dist_weights(map_uid, dist_thres, power, is_inverse, is_arc, is_mile);
+      return w;
+    }
+
+    CreateKernelWeights(map_uid, k, kernel, adaptive_bandwidth, use_kernel_diagonals, is_arc, is_mile) {
+      let w = Module.kernel_weights(map_uid, k, kernel, adaptive_bandwidth, use_kernel_diagonals, is_arc, is_mile);
+      return w;
+    }
+
+    CreateKernelBandwidthWeights(map_uid, dist_thres, kernel, use_kernel_diagonals, is_arc, is_mile) {
+      let w = Module.kernel_bandwidth_weights(map_uid, dist_thres, kernel, use_kernel_diagonals, is_arc, is_mile);
+      return w;
+    }
+
     local_moran(map_uid, weight_uid, col_name) {
       return Module.local_moran(map_uid, weight_uid, col_name);
     }
@@ -110,21 +130,38 @@ function($, ShpReader, ShapeFileMap, GeoJson, GeoJsonMap, MapCanvas) {
       return Module.local_joincount(map_uid, weight_uid, col_name);
     }
 
-    skater(map_uid, weight_uid, k, sel_fields, bound_var, min_bound) {
-      let col_names = new Module.VectorString();
-      for (let i=0; i<sel_fields.length; ++i) {
-        col_names.push_back(sel_fields[i]);
-      }
-      let clusters_vec = Module.skater(map_uid, weight_uid, k, col_names, bound_var, min_bound);
-      let clusters = []; 
-      for (let i=0; i<clusters_vec.size(); ++i) {
-        let ids = [];
-        let clst_vec = clusters_vec.get(i);
-        for (let j=0; j<clst_vec.size(); ++j) {
-          ids.push( clst_vec.get(j) );
+    parseVecVecInt(vvi) {
+      let result = []; 
+      for (let i=0; i<vvi.size(); ++i) {
+        let sub = [];
+        let vi = vvi.get(i);
+        for (let j=0; j<vi.size(); ++j) {
+          sub.push( vi.get(j) );
         }
-        clusters.push(ids);
+        result.push(sub);
       }
+      return result;
+    }
+
+    toVecString(input) {
+      let vs = new Module.VectorString();
+      for (let i=0; i<input.length; ++i) {
+        vs.push_back(input[i]);
+      }
+      return vs;
+    }
+
+    redcap(map_uid, weight_uid, k, sel_fields, bound_var, min_bound, method) {
+      let col_names = this.toVecString(sel_fields);
+      let clusters_vec = Module.redcap(map_uid, weight_uid, k, col_names, bound_var, min_bound, method);
+      let clusters = this.parseVecVecInt(clusters_vec);
+      return clusters;
+    }
+
+    maxp(map_uid, weight_uid, k, sel_fields, bound_var, min_bound, method, tabu_length, cool_rate, n_iter) {
+      let col_names = this.toVecString(sel_fields);
+      let clusters_vec = Module.maxp(map_uid, weight_uid, col_names, bound_var, min_bound, tabu_length, cool_rate, method, k, n_iter);
+      let clusters = this.parseVecVecInt(clusters_vec);
       return clusters;
     }
   }

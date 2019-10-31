@@ -24,7 +24,7 @@ var WeightsDlg= (function($, Utils){
     function ShowWeightsMetaInfo(w_name) {
       if (w_name in weights_dict) {
         let w = weights_dict[w_name];
-        var table='<table id="weightsmeta"><tr><th> Property</th><th> Value</th></tr>';
+        var table='<table id="weightsmeta"><tr><th>&nbsp;Property</th><th> Value</th></tr>';
         table+='<tr><td>Weights Type: </td><td>'+ w.get_weight_type()+'</td></tr>'; 
         table+='<tr><td>Number of Obs: </td><td>'+ w.get_num_obs()+'</td></tr>'; 
         table+='<tr><td>Is Symmetric: </td><td>'+ w.get_is_symmetric()+'</td></tr>'; 
@@ -43,6 +43,11 @@ var WeightsDlg= (function($, Utils){
     $('#dist-slider').slider({
       min: 0, max: 0,
       slide: function( event, ui ) { $('#txt-dist-thr').val(ui.value); }
+    });
+
+    $('#ker-dist-slider').slider({
+      min: 0, max: 0,
+      slide: function( event, ui ) { $('#txt-ker-dist-thr').val(ui.value); }
     });
 
     $('#spn-pow-idst, #spn-cont-order, #spn-dist-knn').spinner();
@@ -65,27 +70,16 @@ var WeightsDlg= (function($, Utils){
         param['cont_threshold'] = parseFloat(cont_threshold);
 
       } else if ( active == 1 ) {
-        var dist_value = "",
-            dist_metric = $('#sel-dist-metr').val(),
-            dist_method =$('input:radio[name=rdo-dist]:checked').attr("id");
-        if ( dist_method == 0 ) {
-          dist_value = $('#spn-dist-knn').val();
-        } else if ( dist_method == 1 ) {
-          dist_value = $('#txt-dist-thr').val();
-        } else if ( dist_method == 2 ) {
-          dist_value = $('#txt-dist-thr').val();
-          param['pow_idist'] = parseInt($('#spn-pow-idst').val());
-        } else {
-          Utils.ShowMsgBox("","Please select a distance method.");
-          return;
-        }
-        param['dist_metric'] = dist_metric;
-        param['dist_method'] = dist_method;
-        param['dist_value'] = parseFloat(dist_value);
+        param['dist_metric'] = $('#sel-dist-metr').val();
+        param['dist_knn'] = parseInt($('#spn-dist-knn').val());
+        param['dist_threshold'] = parseFloat($('#txt-dist-thr').val());
+        param['dist_power'] = parseInt($('#spn-pow-idst').val());
 
       } else if ( active == 2 ) {
         param['kernel_type'] = $("#sel-kel-type").val();
         param['kernel_nn'] = parseInt($("#txt-kel-nn").val());
+        param['kernel_diag'] = $('input:radio[name=rdo-w-diagonal]:checked').attr("id");
+        param['kernel_bandwidth'] = parseFloat($('#txt-ker-dist-thr'));
       }
       param['w_type'] = active;
       return param;
@@ -122,6 +116,17 @@ var WeightsDlg= (function($, Utils){
           }
 
           var param = GetWeightsConf();
+
+          var is_arc = false;
+          var is_mile = true;
+          
+          if (param['dist_metric'] == 1) {
+            is_arc = true;
+          } else if (param['dist_metric'] == 2) {
+            is_arc = true;
+            is_mile = false;
+          }
+
           var w = "";
 
           if (param['w_type'] == 0) {
@@ -136,7 +141,41 @@ var WeightsDlg= (function($, Utils){
               // queen
               w = geoda.CreateQueenWeights(map_uuid, order, include_lower, threshold);
             }
-          } 
+          }  else if (param['w_type'] == 1) {
+            let dist_inverse = $('#cbx-w-inverse').prop("checked");
+            let dist_method =$('input:radio[name=rdo-dist]:checked').attr("id");
+            let is_inverse = (dist_inverse == 1);
+
+            if ( dist_method == 0 ) {
+              // knn
+              let nn = param['dist_knn'];
+              let power = param['dist_power'];
+              w = geoda.CreateKnnWeights(map_uuid, nn, power, is_inverse, is_arc, is_mile);
+            } else if ( dist_method == 1 ) {
+              // thres
+              let dist = param['dist_threshold'];
+              let power = param['dist_power'];
+              w = geoda.CreateDistWeights(map_uuid, dist, power, is_inverse, is_arc, is_mile);
+            } 
+          }  else if (param['w_type'] == 2) {
+            // kernel weights
+            let kernel_diag = (param['kernel_diag'] == 1);
+            let kernel_nm = param['kernel_type'];
+
+            let ker_spec=$('input:radio[name=rdo-w-kernel-spec]:checked').attr("id");
+            if (ker_spec == 0) {
+              // fixed bandwidth
+              let kernel_bandwidth = param['kernel_bandwidth'];
+              w = geoda.CreateKernelBandwidthWeights(map_uuid, kernel_bandwidth, kernel_nm, kernel_diag, is_arc, is_mile);
+
+            } else {
+              let is_adaptive = (ker_spec == 1);
+              // adaptive bandwidth
+              // max nn bandwidth
+              let kernel_nn = param['kernel_nn'];
+              w = geoda.CreateKernelWeights(map_uuid, kernel_nn, kernel_nm, is_adaptive, kernel_diag, is_arc, is_mile);
+            }
+          }
           
           if (w && w.get_uid().length > 0) {
 
@@ -178,6 +217,9 @@ var WeightsDlg= (function($, Utils){
           $('#dist-slider').slider('option', 'min', dist_min);
           $('#dist-slider').slider('option', 'max', dist_max);
           $('#txt-dist-thr').val(dist_min);
+          $('#ker-dist-slider').slider('option', 'min', dist_min);
+          $('#ker-dist-slider').slider('option', 'max', dist_max);
+          $('#txt-ker-dist-thr').val(dist_min);
         }
       },
 

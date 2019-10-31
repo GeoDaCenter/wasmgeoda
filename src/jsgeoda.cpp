@@ -337,9 +337,11 @@ LisaResult local_joincount(const std::string map_uid, const std::string weight_u
     return rst;
 }
 
-std::vector<std::vector<int> > skater(const std::string map_uid, const std::string weight_uid,
-        int k, std::vector<std::string> sel_names, std::string bound_var, double min_bound) {
-    std::cout << "skater(), k=" << k << ":" << bound_var << ":" << min_bound << std::endl;
+std::vector<std::vector<int> > redcap(const std::string map_uid, const std::string weight_uid,
+        int k, std::vector<std::string> sel_names, std::string bound_var, double min_bound,
+        std::string method)
+{
+    std::cout << "redcap(), k=" << k << ":" << bound_var << ":" << min_bound << std::endl;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
@@ -347,24 +349,44 @@ std::vector<std::vector<int> > skater(const std::string map_uid, const std::stri
         if (w) {
             std::vector<std::vector<double> > data;
             for (size_t i=0; i<sel_names.size(); ++i) {
-                std::cout << sel_names[i];
-                std::vector<double> vals = json_map->GetNumericCol(sel_names[i]);
-                for (size_t j = 0; j < vals.size(); ++j) {
-                    std::cout << vals[j] << std::endl;
-                }
-                data.push_back(vals);
+                data.push_back(json_map->GetNumericCol(sel_names[i]));
             }
             if ( min_bound == -1) {
-                std::vector<std::vector<int> > clst = gda_skater(k, w, data);
-                double totalss = gda_totalsumofsquare(data);
-                double withinss = gda_withinsumofsquare(clst, data);
-                double ratio = (totalss - withinss) / totalss;
-                std::cout << ratio << std::endl;
-                return clst;
+                return gda_redcap(k, w, data, method);
             } else {
                 std::vector<double> bound_vals = json_map->GetNumericCol(bound_var);
-                return gda_skater(k, w, data, "euclidean", bound_vals, min_bound);
+                return gda_redcap(k, w, data, method, "euclidean", bound_vals, min_bound);
             }
+        }
+    }
+    return std::vector<std::vector<int> >();
+}
+
+std::vector<std::vector<int> > maxp(const std::string map_uid, const std::string weight_uid,
+        std::vector<std::string> sel_names, std::string bound_var, double min_bound,
+        int tabu_length, double cool_rate,
+        std::string method, int k, int n_iter)
+{
+    std::cout << "maxp(), bound_var:" << bound_var << ":" << min_bound << std::endl;
+
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GeoDaWeight *w = json_map->GetWeights(weight_uid);
+        if (w) {
+            std::vector<std::vector<double> > data;
+            for (size_t i=0; i<sel_names.size(); ++i) {
+                data.push_back(json_map->GetNumericCol(sel_names[i]));
+            }
+            std::vector<double> bound_vals;
+            if ( min_bound == -1) {
+                for (size_t j=0; j<w->num_obs; ++j) {
+                    bound_vals.push_back(1);
+                }
+                min_bound = k;
+            } else {
+                bound_vals = json_map->GetNumericCol(bound_var);
+            }
+            return gda_maxp(w, data, bound_vals, min_bound, method, n_iter, tabu_length, cool_rate);
         }
     }
     return std::vector<std::vector<int> >();
@@ -430,7 +452,8 @@ EMSCRIPTEN_BINDINGS(my_module) {
     emscripten::function("local_geary", &local_geary);
     emscripten::function("local_joincount", &local_joincount);
 
-    emscripten::function("skater", &skater);
+    emscripten::function("redcap", &redcap);
+    emscripten::function("maxp", &maxp);
 }
 
 int main() {

@@ -53,7 +53,7 @@ const std::vector<std::vector<int> > gda_redcap(unsigned int k,
                                                 const std::string &redcap_method =  "firstorder-singlelinkage",
                                                 const std::string &distance_method = "euclidean",
                                                 const std::vector<double>& bound_vals = std::vector<double>(),
-                                                double min_bound = 0,
+                                                double min_bound = -1,
                                                 int rand_seed = 123456789);
 
 /**

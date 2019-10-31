@@ -163,11 +163,12 @@ GeoDaWeight* GdaGeojson::CreateKnnWeights(unsigned int k,
     w_uid << is_arc;
     w_uid << is_mile;
     std::string w_uid_str = w_uid.str();
+    std::cout << "CreateKnnWeights()" << w_uid_str << std::endl;
     GeoDaWeight* w = 0;
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        gda_knn_weights(this, k, power, is_inverse, is_arc, is_mile);
+        w = gda_knn_weights(this, k, power, is_inverse, is_arc, is_mile);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
@@ -192,7 +193,7 @@ GeoDaWeight* GdaGeojson::CreateDistanceWeights(double dist_thres,
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        gda_distance_weights(this, dist_thres, "", power, is_inverse, is_arc, is_mile);
+        w = gda_distance_weights(this, dist_thres, "", power, is_inverse, is_arc, is_mile);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
@@ -216,7 +217,7 @@ GeoDaWeight* GdaGeojson::CreateKernelWeights(double dist_thres,
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        gda_distance_weights(this, dist_thres, "", 1.0, false, is_arc, is_mile, kernel, use_kernel_diagonals);
+        w = gda_distance_weights(this, dist_thres, "", 1.0, false, is_arc, is_mile, kernel, use_kernel_diagonals);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
@@ -242,7 +243,7 @@ GeoDaWeight* GdaGeojson::CreateKernelWeights(unsigned int k,
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        gda_knn_weights(this, k, 1.0, false, is_arc, is_mile, kernel, 0.0, adaptive_bandwidth, use_kernel_diagonals);
+        w = gda_knn_weights(this, k, 1.0, false, is_arc, is_mile, kernel, 0.0, adaptive_bandwidth, use_kernel_diagonals);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }

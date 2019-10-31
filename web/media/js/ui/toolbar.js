@@ -70,6 +70,8 @@ var Toolbar = (function($, FileDlg){
       '#btnParcoords' : '#dlg-parcoords',
       '#btnLocalGeary' : '#dlg-localgeary-map',
       '#btnLocalJoinCount' : '#dlg-localjc-map',
+      '#btnREDCAP' : '#dlg-redcap',
+      '#btnMaxp' : '#dlg-maxp',
       //'#btnPCA' : '#dlg-pca',
       //'#btnKMeans' : '#dlg-kmeans',
       //'#btnCarto' : '#dialog-cartodb',

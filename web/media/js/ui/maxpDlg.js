@@ -15,13 +15,18 @@ var MaxpDlg = (function($){
 
     $("#chk-maxp-mbound").click( function(){
       if( $(this).is(':checked') ) {
-        $("input-maxp-mbound").attr("disabled", true);
-        $("slider-maxp-bound").attr("disabled", true);
+        $("#input-maxp-mbound").attr("disabled", false);
+        $("#input-maxp-mbound-pct").attr("disabled", false);
+        $("#input-maxp-k").attr("disabled", true);
+        $('#sel-maxp-bound-var').attr("disabled", false);
       } else {
-        $("input-maxp-mbound").attr("disabled", "disabled");
-        $("input-maxp-mbound").val('');
-        $("slider-maxp-bound").attr("disabled", "disabled");
-        $("slider-maxp-bound").val('');
+        $("#input-maxp-mbound").attr("disabled", true);
+        $("#input-maxp-mbound").val('');
+        $("#input-maxp-mbound-pct").attr("disabled", true);
+        $("#input-maxp-mbound-pct").val('');
+        $('#sel-maxp-bound-var').val('');
+        $("#input-maxp-k").attr("disabled", false);
+        $('#sel-maxp-bound-var').attr("disabled", true);
         $('#sel-maxp-bound-var').val('');
       }
    });
@@ -58,6 +63,20 @@ var MaxpDlg = (function($){
       $('#slider-maxp-bound').slider('option', 'value', suggest);
     });
 
+    $('#sel-maxp-method').change(function(e){
+      let sel_idx = e.target.selectedIndex;
+      if (sel_idx == 0) {
+        $('#tabu-div').hide();
+        $('#sa-div').hide();
+      } else if (sel_idx == 1) {
+        $('#tabu-div').show();
+        $('#sa-div').hide();
+      } else if (sel_idx == 2) {
+        $('#tabu-div').hide();
+        $('#sa-div').show();
+      }
+    });
+
     function ProcessClusterMap(fields, result) {
       var mapCanvas = MapManager.getInstance().GetMapCanvas(),
           map = mapCanvas.map,
@@ -91,7 +110,7 @@ var MaxpDlg = (function($){
       });
     }
 
-    $("#dlg-kcluster-map").dialog({
+    $("#dlg-maxp").dialog({
       dialogClass: "dialogWithDropShadow",
       width: 560,
       height: 480,
@@ -101,7 +120,12 @@ var MaxpDlg = (function($){
       draggable: false,
       open: function(event, ui) {
         $('#sel-w-files').appendTo('#maxp-weights-plugin');
-        $("input-maxp-mbound-pct").prop("disabled", true);
+        $("#input-maxp-mbound").attr("disabled", false);
+        $("#input-maxp-mbound-pct").attr("disabled", false);
+        $("#input-maxp-k").attr("disabled", true);
+        $("#chk-maxp-mbound").val(true);
+        $('#tabu-div').hide();
+        $('#sa-div').hide();
       },
       beforeClose: function(event,ui){
         $('#dialog-arrow').hide();
@@ -133,6 +157,27 @@ var MaxpDlg = (function($){
             // get min bound
             bound_var = $('#sel-maxp-bound-var').val();
             min_bound = parseFloat($('#input-maxp-mbound').val());
+          } else if (k == NaN) {
+            Utils.ShowMsgBox("Info", 'Please input either "Minimum Bound" or "Minimum # per Region".');
+            return;
+          }
+
+          var method = $('#sel-maxp-method').val();
+          var tabu_length = parseInt($('#input-tabu-length').val());
+          if (tabu_length < 0 || tabu_length == NaN) {
+            Utils.ShowMsgBox("Info", 'Please input a positive integer number for tabu length.');
+            return;
+          }
+          var cool_rate = parseFloat($('#input-cooling-rate').val());
+          if (cool_rate < 0 || cool_rate == NaN || cool_rate > 1) {
+            Utils.ShowMsgBox("Info", 'Please input a float number in range (0,1) for coolring rate.');
+            return;
+          }
+
+          var n_iter = parseInt($('#input-maxp-iterations').val());
+          if (n_iter < 0 ) {
+            Utils.ShowMsgBox("Info", 'Please input a positive integer number for number of iterations.');
+            return;
           }
 
           require(['ui/weightsDlg'], function(WeightsDlg) {
@@ -146,8 +191,10 @@ var MaxpDlg = (function($){
             var w_uid = w_obj.get_uid(); 
 
             prg_bar.show();
-            var clusters = geoda.maxp(map_uuid, w_uid, k, fields, bound_var, min_bound);
+
+            var clusters = geoda.maxp(map_uuid, w_uid, k, fields, bound_var, min_bound, method, tabu_length, cool_rate, n_iter);
             ProcessClusterMap(fields, clusters);
+
             prg_bar.hide();
             that.dialog("close");
 

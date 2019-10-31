@@ -168,16 +168,12 @@
       <div id="btnMaxp" class="image-wrap" style="background-image: url(../../media/img/wiz-cho-poly.png);">
 		<span>Max-p</span>
 	  </div>
-	  <!--
       <div id="btnPCA" class="image-wrap" style="background-image: url(../../media/img/pca.png);">
         <span>PCA</span>
       </div>
-	  -->
-	  <!--
       <div id="btnKMeans" class="image-wrap" style="background-image: url(../../media/img/kmeans.png);">
         <span>KMeans</span>
 	  </div>
-	  -->
 	</div>
 
     <div class="down-arrow" id="tool-menu-arrow"></div>
@@ -450,15 +446,15 @@
 			<td>
 				<input type="checkbox" id="chk-skater-mbound" id=0>
 				<select id="sel-skater-bound-var" style="width: 120px;"></select>
-				<input type="text" id="input-skater-mbound" style="width: 100px;">
+				<input type="text" id="input-skater-mbound" style="width: 70px;">
 				<br/>
 				<table>
 					<tr>
 						<td>
-							<div id="slider-skater-bound" style="width:140px;"></div>
+							<div id="slider-skater-bound" style="width:130px;"></div>
 						</td>
 						<td>
-							<input type="text" id="input-skater-mbound-pct" value="10%" style="width: 100px;">
+							<input type="text" id="input-skater-mbound-pct" value="10%" style="width: 70px;">
 						</td>
 					</tr>
 				</table>
@@ -471,6 +467,133 @@
     </table>
     <br/>
     <div class="gda-prg-bar" id="progress_bar_skater"><img src="../../media/img/progress-bar.gif"></div>
+  </div>
+
+  <!--
+  ///////////////////////////////////////////////////////////////////////////////
+  //  REDCAP Map
+  ///////////////////////////////////////////////////////////////////////////////
+  -->
+  <div class="mainDlg"  id="dlg-redcap" title="REDCAP">
+    <table >
+		<tr>
+			<td width="150px"><label for="name">Number of Cluster:</label></td>
+			<td><input type="text" id="input-redcap-k" value="4"></td>
+		</tr>
+		<tr>
+			<td width="150px"><label for="name">Select Weights:</label></td>
+			<td><div id='redcap-weights-plugin'></div></td>
+		</tr>
+		<tr>
+			<td width="150px"><label for="name">Select Method:</label></td>
+			<td>
+				<select id="sel-redcap-method">
+					<option valu="firstorder-singlelinkage">firstorder-singlelinkage</option>
+					<option valu="fullorder-completelinkage">fullorder-completelinkage</option>
+					<option valu="fullorder-averagelinkage" selected>fullorder-averagelinkage</option>
+					<option valu="fullorder-singlelinkage">fullorder-singlelinkage</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td width="150px" style="vertical-align:top"><label for="name">Minimum Bound:</label></td>
+			<td>
+				<input type="checkbox" id="chk-redcap-mbound" id=0>
+				<select id="sel-redcap-bound-var" style="width: 120px;"></select>
+				<input type="text" id="input-redcap-mbound" style="width: 70px;">
+				<br/>
+				<table>
+					<tr>
+						<td>
+							<div id="slider-redcap-bound" style="width:130px;"></div>
+						</td>
+						<td>
+							<input type="text" id="input-redcap-mbound-pct" value="10%" style="width: 70px;">
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<td width="150px" style="vertical-align:top"><label for="name">Select Variables:</label></td>
+			<td><div id="redcap-sels" class="left_al scroll_v_div"></div></td>
+		</tr>
+    </table>
+    <br/>
+    <div class="gda-prg-bar" id="progress_bar_redcap"><img src="../../media/img/progress-bar.gif"></div>
+  </div>
+
+  <!--
+  ///////////////////////////////////////////////////////////////////////////////
+  //  Maxp Map
+  ///////////////////////////////////////////////////////////////////////////////
+  -->
+  <div class="mainDlg"  id="dlg-maxp" title="Max-p">
+    <table >
+		<tr>
+			<td width="150px"><label for="name">Select Weights:</label></td>
+			<td><div id='maxp-weights-plugin'></div></td>
+		</tr>
+		<tr>
+			<td width="150px" style="vertical-align:top"><label for="name">Select Method:</label></td>
+			<td>
+				<select id="sel-maxp-method">
+					<option valu="greedy" selected>Greedy</option>
+					<option valu="tabu">Tabu Search</option>
+					<option valu="sa">Simulated Annealing</option>
+				</select>
+				<div id="tabu-div">
+				<table >
+					<tr>
+						<td><label for="name">Tabu Length:</label></td>
+						<td><input type="text" id="input-tabu-length" value="85" style="width:100px"></td>
+					</tr>
+				</table>
+				</div>
+				<div id="sa-div">
+				<table >
+					<tr>
+						<td><label for="name">Cooling Rate:</label></td>
+						<td><input type="text" id="input-cooling-rate" value="0.85" style="width:100px"></td>
+					</tr>	
+				</table>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td width="150px" style="vertical-align:top"><label for="name">Minimum Bound:</label></td>
+			<td>
+				<input type="checkbox" id="chk-maxp-mbound">
+				<select id="sel-maxp-bound-var" style="width: 120px;"></select>
+				<input type="text" id="input-maxp-mbound" style="width: 70px;">
+				<br/>
+				<table>
+					<tr>
+						<td>
+							<div id="slider-maxp-bound" style="width:130px;"></div>
+						</td>
+						<td>
+							<input type="text" id="input-maxp-mbound-pct" value="10%" style="width: 70px;">
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<td width="150px"><label for="name">Minimum # per Region:</label></td>
+			<td><input type="text" id="input-maxp-k"></td>
+		</tr>
+		<tr>
+			<td width="150px"><label for="name"># Iterations:</label></td>
+			<td><input type="text" id="input-maxp-iterations" value="99"></td>
+		</tr>
+		<tr>
+			<td width="150px" style="vertical-align:top"><label for="name">Select Variables:</label></td>
+			<td><div id="maxp-sels" class="left_al scroll_v_div"></div></td>
+		</tr>
+    </table>
+    <br/>
+    <div class="gda-prg-bar" id="progress_bar_maxp"><img src="../../media/img/progress-bar.gif"></div>
   </div>
 
   <!--
@@ -798,7 +921,7 @@
       <div id="tabs-1">
 		<table>
 			<tr>
-				<td>Contiguity Type</td>
+				<td>Contiguity Type:&nbsp;</td>
 				<td>
 					<select id="sel-cont-type">
 					<option value="0" selected>Rook</option>
@@ -807,16 +930,16 @@
 				</td>
 			</tr>
 			<tr>
-				<td>Order of Contiguity</td>
+				<td>Order of Contiguity:&nbsp;</td>
 				<td><input id="spn-cont-order" value=1></td>
 			</tr>
 			<tr>
-				<td>Include Lower Orders </td>
+				<td>Include Lower Orders:&nbsp;</td>
 				<td><input type="checkbox" id="cbx-cont-ilo"></td>
 			</tr>
 			<tr>
-				<td>distance threshold </td>
-				<td><input id="cont-dist-thres" value="0.0"></td>
+				<td>Distance Threshold:&nbsp;</td>
+				<td><input type="text" id="cont-dist-thres" value="0.0"></td>
 			</tr>
 		</table>
       </div>
@@ -833,8 +956,8 @@
 			</td>
 		</tr>
 		<tr height="22px">
-			<td><input type="radio" name="rdo-dist" id=0> k-Nearest Neighbors</td>
-			<td># of neighbors <input id="spn-dist-knn" value="1"></td>
+			<td><input type="radio" name="rdo-dist" id=0 checked> k-Nearest Neighbors</td>
+			<td># of neighbors <input id="spn-dist-knn" value="4"></td>
 		</tr>
 		<tr>
 			<td><input type="radio" name="rdo-dist" id=1>Threshold Distane</td>
@@ -845,7 +968,7 @@
 			</td>
 		</tr>
 		<tr>
-			<td><input type="radio" name="rdo-dist" id=2>Power of Inverse Distance</td>
+			<td><input type="checkbox" id="cbx-w-inverse">Power of Inverse Distance</td>
 			<td><input id="spn-pow-idst" value="1"></td>
 		</tr>
 		</table>
@@ -853,20 +976,37 @@
       <div id="tabs-3">
 		<table>
 		<tr>
-			<td>Select Kernel Function Type</td>
+			<td style="width: 240px; vertical-align:top">Kernel Function: &nbsp;</td>
 			<td>
-			<select id="sel-kel-type">
-			<option value="0" selected>Uniform</option>
-			<option value="1">Triangular</option>
-			<option value="2">Quadratic</option>
-			<option value="3">Quartic</option>
-			<option value="4">Gaussian</option>
-			</select>
+				<select id="sel-kel-type">
+				<option value="uniform" selected>Uniform</option>
+				<option value="triangular">Triangular</option>
+				<option value="epanechnikov">Epanechnikov</option>
+				<option value="quartic">Quartic</option>
+				<option value="gaussian">Gaussian</option>
+				</select>
+				<br/>
+				<input type="radio" name="rdo-w-diagonal" id=0 checked>Diagonal weights=1
+				<br/>
+				<input type="radio" name="rdo-w-diagonal" id=1>Apply kernel to diagonal weights
+				<br/>
+				<br/>
 			</td>
 		</tr>
 		<tr>
-			<td>Numbe of Neighbors</td>
-			<td><input type="text" id="txt-kel-nn" value="1"></td>
+			<td style="vertical-align:top"><input type="radio" name="rdo-w-kernel-spec" id=0>Specify Bandwidth:&nbsp;</td>
+			<td>
+				<input type="text" id="txt-ker-dist-thr" value="0.0" style="float:left;margin-right:100px;width:100px">
+				<div id="ker-dist-slider" style="margin: 5px 0 0 120px; width: 80px"></div>
+			</td>
+		</tr>
+		<tr>
+			<td style="vertical-align:top"><input type="radio" name="rdo-w-kernel-spec" id=1 checked>Adaptive bandwidth:&nbsp;</td>
+			<td>Numbe of Neighbors:&nbsp;<input type="text" id="txt-kel-nn" value="5"></td>
+		</tr>
+		<tr>
+			<td><input type="radio" name="rdo-w-kernel-spec" id=2>Use max knn distance as bandwidth&nbsp;</td>
+			<td></td>
 		</tr>
 		</table>
       </div>
@@ -1140,7 +1280,7 @@
 			</td>
 		      </tr>
 		      <tr>
-			<td><input type="radio" name="spreg-rdo-dist" id=2>Power of Inverse Distance</td>
+			<td><input type="checkbox" name="spreg-rdo-dist" id=2>Power of Inverse Distance</td>
 			<td><input id="spreg-spn-pow-idst" value="1"></td>
 		      </tr>
 		    </table>

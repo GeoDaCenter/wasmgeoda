@@ -15,13 +15,15 @@ var KClusterDlg = (function($){
 
     $("#chk-skater-mbound").click( function(){
       if( $(this).is(':checked') ) {
-        $("input-skater-mbound").attr("disabled", true);
-        $("slider-skater-bound").attr("disabled", true);
+        $("#input-skater-mbound").attr("disabled", false);
+        $("#input-skater-mbound-pct").attr("disabled", false);
+        $('#sel-skater-bound-var').attr("disabled", false);
       } else {
-        $("input-skater-mbound").attr("disabled", "disabled");
-        $("input-skater-mbound").val('');
-        $("slider-skater-bound").attr("disabled", "disabled");
-        $("slider-skater-bound").val('');
+        $("#input-skater-mbound").attr("disabled", true);
+        $("#input-skater-mbound").val('');
+        $("#input-skater-mbound-pct").attr("disabled", true);
+        $("#input-skater-mbound-pct").val('');
+        $('#sel-skater-bound-var').attr("disabled", true);
         $('#sel-skater-bound-var').val('');
       }
    });
@@ -101,7 +103,11 @@ var KClusterDlg = (function($){
       draggable: false,
       open: function(event, ui) {
         $('#sel-w-files').appendTo('#skater-weights-plugin');
-        $("input-skater-mbound-pct").prop("disabled", true);
+        $("#input-skater-mbound").attr("disabled", true);
+        $("#input-skater-mbound").val('');
+        $("#input-skater-mbound-pct").attr("disabled", true);
+        $("#input-skater-mbound-pct").val('');
+        $('#sel-skater-bound-var').attr("disabled", true);
       },
       beforeClose: function(event,ui){
         $('#dialog-arrow').hide();
