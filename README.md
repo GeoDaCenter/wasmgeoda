@@ -1,5 +1,15 @@
 # jsgeoda
  
+## build
+
+./build.sh
+
+## run
+./run.sh
+
+## deploy
+./web 
+
 
 Using boost 
 
