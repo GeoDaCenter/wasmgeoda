@@ -60,6 +60,79 @@ var OpenFileDlg = (function() {
 
     dlgTabs.tabs({ active: 0 });
 
+    // source: http://stackoverflow.com/a/11058858
+    function str2ab(str) {
+      var buf = new ArrayBuffer(str.length); // 1 bytes for each char
+      var bufView = new Uint8Array(buf);
+      for (var i = 0, strLen = str.length; i < strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+      }
+      return buf;
+    }
+
+    function load_geojson(map_uid, content) {
+        require(['ui/mapManager'], function(MapManager) {
+          var data = {
+            'file_type' : 'json',
+            'file_name' : map_uid,
+            'file_content' : JSON.parse(content)
+          };
+          
+          MapManager.getInstance().AddMap(data, function(map){
+            // add map name/fields to all dialog
+            UIManager.getInstance();
+            InitDialogs(map, function(map) {
+              UIManager.getInstance().SetupMap(map);
+              $('#dialog-open-file').dialog('close');
+            });
+          });
+
+          $('#progress_bar_openfile').hide();
+
+          var file_target = {
+            result : str2ab(content)
+          };
+          MapManager.getInstance().AddGeoDa(map_uid, file_target);
+        });
+    }
+
+    $('#sample_guerry').click(function(e){
+      $.ajax({
+        url:  "https://webgeoda.github.io/data/guerry.geojson",
+        dataType :  'text',
+        beforeSend : function(xhr) {
+          $('#progress_bar_openfile').show();
+        },
+        success : function(content) {
+          load_geojson("guerry.geojson",content);
+        }
+      });
+    });
+    $('#sample_nat').click(function(e){
+      $.ajax({
+        url:  "https://webgeoda.github.io/data/natregimes.geojson",
+        dataType :  'text',
+        beforeSend : function(xhr) {
+          $('#progress_bar_openfile').show();
+        },
+        success : function(content) {
+          load_geojson("natregimes.geojson",content);
+        }
+      });
+    });
+    $('#sample_sf').click(function(e){
+      $.ajax({
+        url:  "https://webgeoda.github.io/data/sfcrime.geojson",
+        dataType :  'text',
+        beforeSend : function(xhr) {
+          $('#progress_bar_openfile').show();
+        },
+        success : function(content) {
+          load_geojson("sfcrime.geojson",content);
+        }
+      });
+    });
+
     keyEl.donetyping(function() {
       GetCartoTables();
     });
@@ -202,8 +275,8 @@ var OpenFileDlg = (function() {
 
     // the main OpenFile Dialog
     dlg.dialog({
-      height: 580,
-      width: 700,
+      height: 680,
+      width: 800,
       autoOpen: false,
       modal: false,
       dialogClass: "dialogWithDropShadow",

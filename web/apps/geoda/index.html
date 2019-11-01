@@ -31,9 +31,7 @@
     <div class="awesome-bar">
       <div class="logo"></div>
       <div class="header_topright">
-	<div class="account"> Account</div>
-	<div class="basemap"> Basemap</div>
-	<div class="publish" id="btnCarto"> Share</div>
+		<div class="basemap"> Basemap</div>
       </div>
     </div>
     <div role="main" class="ui-content" id="map-container">
@@ -55,21 +53,19 @@
 	  	<div id="multilayer_arrow"></div>
 	    <div class="blockBtn" id="btnNewMap" style="margin-left:10px;"><img src="../../media/img/nmap.png"/><span>Map</span></div>
 	  </td>
+	  <td width=165>
+		<div class="blockBtn" id="btnCreateW" ><img src="../../media/img/weights.png"/><span>Spatial Weights</span></div>
+	  </td>
 	  <td width=100>
 	    <div class="blockBtn" id="btnExplore"><img src="../../media/img/hist.png"/><span>Explore</span></div>
 	  </td>
-	  <td width=180>
+	  <td width=220>
 	    <div class="blockBtn" id="btnSpace"><img src="../../media/img/moran.png"/><span>Spatial Autocorrelation</span></div>
 	  </td>
-	  <td width=150>
+	  <td width=200>
 	    <div class="blockBtn" id="btnClustering"><img src="../../media/img/table.png"/><span>Spatial Clustering</span></div>
 	  </td>
-	  <td width=80>
-		  <!--
-		<div class="blockBtn" id="btnShowEdit" ><img src="../../media/img/edit.png"/><span>Tools</span></div>
-		  -->
-	  </td>
-	  <td width=80>
+	  <td width=20>
 		<!--
 			<div class="blockBtn" id="btnSpreg"><img src="../../media/img/spreg.png"/><span>Regression</span></div>
 		-->
@@ -100,7 +96,7 @@
       <div id="btnCatMap" class="image-wrap" style="background-image: url(../../media/img/wiz-cat-poly.png);">
 		<span>Choropleth Map</span>
       </div>
-      <div id="btnDensity" class="image-wrap" style="background-image: url(../../media/img/wiz-density.jpeg);">
+      <div id="btnDensity" class="image-wrap" style="background-image: url(../../media/img/wiz-density.jpeg);display:none;">
 		<span>Point Cloud Map</span>
       </div>
       <div id="btnVoronoiMap" class="image-wrap" style="background-image: url(../../media/img/wiz-voronoi.png);display:none;">
@@ -133,9 +129,11 @@
     </div>
 
     <div class="tool-menu" id="space-menu">
+		<!--
       <div id="btnCreateW" class="image-wrap" style="background-image: url(../../media/img/wiz-w.png); ">
 		<span>Spatial Weights</span>
-      </div>
+	  </div>
+	-->
       <div id="btnHistW" class="image-wrap" style="background-image: url(../../media/img/wiz-hist-w.png);display:none;">
 		<span>Weights Histogram</span>
       </div>
@@ -144,36 +142,38 @@
 		<span>Moran Scatter Plot</span>
       </div>
 	  -->
-      <div id="btnLISA" class="image-wrap" style="background-image: url(../../media/img/wiz-lisa.png)">
+      <div id="btnLISA" class="image-wrap" style="background-image: url(../../media/img/localmoran.png)">
 		<span>Local Moran</span>
       </div>
-      <div id="btnLocalG" class="image-wrap" style="background-image: url(../../media/img/wiz-lisa.png);">
+      <div id="btnLocalG" class="image-wrap" style="background-image: url(../../media/img/localg.png);">
 		<span>Local Getis-Ord G</span>
       </div>
       <div id="btnLocalGeary" class="image-wrap" style="background-image: url(../../media/img/localgeary.png);">
 		<span>Local Geary</span>
       </div>
-      <div id="btnLocalJoinCount" class="image-wrap" style="background-image: url(../../media/img/localgeary.png);">
+      <div id="btnLocalJoinCount" class="image-wrap" style="background-image: url(../../media/img/localjc.png);">
 		<span>Local Join Count</span>
       </div>
 	</div>
 	
 	<div class="tool-menu" id="clustering-menu">
-      <div id="btnKCluster" class="image-wrap" style="background-image: url(../../media/img/wiz-cho-poly.png);">
+      <div id="btnKCluster" class="image-wrap" style="background-image: url(../../media/img/skater.png);">
 		<span>SKATER</span>
 	  </div>
-      <div id="btnREDCAP" class="image-wrap" style="background-image: url(../../media/img/wiz-cho-poly.png);">
+      <div id="btnREDCAP" class="image-wrap" style="background-image: url(../../media/img/redcap.png);">
 		<span>REDCAP</span>
 	  </div>
-      <div id="btnMaxp" class="image-wrap" style="background-image: url(../../media/img/wiz-cho-poly.png);">
+      <div id="btnMaxp" class="image-wrap" style="background-image: url(../../media/img/maxp.png);">
 		<span>Max-p</span>
 	  </div>
+	<!--
       <div id="btnPCA" class="image-wrap" style="background-image: url(../../media/img/pca.png);">
         <span>PCA</span>
       </div>
       <div id="btnKMeans" class="image-wrap" style="background-image: url(../../media/img/kmeans.png);">
         <span>KMeans</span>
 	  </div>
+	-->
 	</div>
 
     <div class="down-arrow" id="tool-menu-arrow"></div>
@@ -181,6 +181,16 @@
     <div id="btnOpenData"><img src="../../media/img/bigplus.png"></div>
   	<div id="legend" class="info">Legend</div>
 
+  <div id="mapInfo" class='info'>
+    <div id="mapproviders">
+	  <img id="0" src="../../media/img/b0.png">
+	  <img id="1" src="../../media/img/b1.png">
+	  <img id="2" src="../../media/img/b2.png">
+	  <img id="3" src="../../media/img/b3.png">
+	  <img id="4" src="../../media/img/b4.png">
+	  <img id="5" src="../../media/img/b5.png">
+    </div>
+  </div>
   </div>  <!--end role "map-page"-->
 
   <!--
@@ -189,22 +199,19 @@
   ///////////////////////////////////////////////////////////////////////////////
   -->
   <div id="dialog-open-file"  title="Let's get started">
-    <div class="intro">Load your map files from one of these sources:</div>
     <div id="tabs-dlg-open-file" class="centered">
       <ul>
-      	<li><a href="#tabs-1">Local Disk</a></li>
+		  <li><a href="#tabs-1">Load your map files:</a></li>
+		  <!--
       	<li><a href="#tabs-2">CartoDB</a></li>
-      	<li><a href="#tabs-3">Dropbox</a></li>
+		  <li><a href="#tabs-3">Dropbox</a></li>
+		  -->
       </ul>
 	  <div id="tabs-1">
-		<div id="drop_zone">Drop files here</div>
+		<div id="drop_zone">Drop a geojson file here</div>
 		<div id="progress_bar"><div class="percent">0%</div></div>
-		<span class="tip">Supported files: a zip file of <img src="../../media/img/file-json.png"> or
-		<img src="../../media/img/file-shp.png" alt="*.shp file">+
-		<img src="../../media/img/file-dbf.png" alt="*.dbf file">+
-		<img src="../../media/img/file-shx.png" alt="*.shx file">+
-		<img src="../../media/img/file-prj.png" alt="*.prj file"></span>
 	  </div>
+	  <!--
 	<div id="tabs-2">
 	  <form id="cartodb-form">
 	  <table class="tableContainer">
@@ -226,7 +233,27 @@
    	</div>
     <div id="tabs-3">
 	  <div id="dropbox_div"></div>
-    </div>
+	</div>
+-->
+	<div class="intro">Or, click one of the sample dataset below:</div>
+	<div>
+		<table>
+			<tr>
+				<td style="text-align: center;">
+					<img src="../../media/img/Guerry.png" class="sample"  id="sample_guerry">
+					<br/>2.0Mb
+				</td>
+				<td style="text-align: center;">
+					<img src="../../media/img/USHomicides.png" class="sample" id="sample_nat">
+					<br/>7.1Mb
+				</td>
+				<td style="text-align: center;">
+					<img src="../../media/img/SanFranCrime.png" class="sample" id="sample_sf">
+					<br/>1.4Mb
+				</td>
+			</tr>
+		</table>
+	</div>
     <div class="gda-prg-bar" id="progress_bar_openfile"><img src="../../media/img/progress-bar.gif"></div>
   </div>
 
@@ -248,9 +275,6 @@
 	    </tr>
 	    <tr><td></td>
 	      <td>
-	  {% if auth_provider != "" %}
-	      <input type="checkbox" id="auth_provider" checked> Share this map to your "{{ auth_provider }}" account
-	  {% endif %}
 	      </td>
 	    </tr>
 	  </table>
@@ -419,6 +443,10 @@
     <tr>
       <td width="200"><label for="name">Select weights:</label></td>
       <td><div id='lisa-weights-plugin'></div></td>
+    </tr>
+    <tr>
+      <td width="200"><label for="name">Randomization (#permutations):</label></td>
+      <td><input type="text" id="local-moran-perm" style="width: 70px;" value="999" readonly></td>
     </tr>
    </table>
     <br/>
@@ -621,6 +649,10 @@
 			<td><input type="checkbox" id="chk-local-gstar" id=0>Calculates the Getis-Ord Gi* statistic?
 			</td>
 		</tr>
+		<tr>
+		<td width="200"><label for="name">Randomization (#permutations):</label></td>
+		<td><input type="text" id="local-moran-perm" style="width: 70px;" value="999" readonly></td>
+		</tr>
    </table>
    <br/>
    <br/>
@@ -647,6 +679,10 @@
 			<td width="200"><label for="name">Select weights:</label></td>
 			<td><div id='localgeary-weights-plugin'></div></td>
 		</tr>
+		<tr>
+		<td width="200"><label for="name">Randomization (#permutations):</label></td>
+		<td><input type="text" id="local-moran-perm" style="width: 70px;" value="999" readonly></td>
+		</tr>
 	</table>
 	<br/>
 	<br/>
@@ -672,6 +708,10 @@
 		<tr>
 			<td width="200"><label for="name">Select weights:</label></td>
 			<td><div id='localjc-weights-plugin'></div></td>
+		</tr>
+		<tr>
+		<td width="200"><label for="name">Randomization (#permutations):</label></td>
+		<td><input type="text" id="local-moran-perm" style="width: 70px;" value="999" readonly></td>
 		</tr>
 	</table>
 	<br/>
@@ -1529,33 +1569,6 @@
     <div>
       <p id="msg-title"></p>
       <p id="msg-content"></p>
-    </div>
-  </div>
-
-  <div id="userInfo" class="info-div">
-    <p>{{userid}}
-      {% if auth_provider == "twitter" %}
-	<img src="../../media/img/account-twitter.png">
-      {% elif auth_provider == "google" %}
-	<img src="../../media/img/account-google.png">
-      {% elif auth_provider == "facebook" %}
-	<img src="../../media/img/account-facebook.png">
-      {% elif auth_provider == "tumblr" %}
-	<img src="../../media/img/account-tumblr.png">
-      {% endif %}
-      <button id="btn_logout" class="ui-button ui-widget ui-state-default ui-corner-all">Logout</button>
-    </p>
-    <span>Storage Usage: <img src="../../media/img/capacity.png" class="capacity"></span>
-  </div>
-
-  <div id="mapInfo" class='info-div'>
-    <div id="mapproviders">
-	  <img id="0" src="../../media/img/b0.png">
-	  <img id="1" src="../../media/img/b1.png">
-	  <img id="2" src="../../media/img/b2.png">
-	  <img id="3" src="../../media/img/b3.png">
-	  <img id="4" src="../../media/img/b4.png">
-	  <img id="5" src="../../media/img/b5.png">
     </div>
   </div>
 

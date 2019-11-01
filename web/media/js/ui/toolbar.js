@@ -85,13 +85,13 @@ var Toolbar = (function($, FileDlg){
 	      });
       $(btnID).click(function(){
   	     // fade all buttons first
-  	     $('.image-wrap').css({"-webkit-filter":"grayscale(100%) opacity(0.8)",});
+  	     //$('.image-wrap').css({"-webkit-filter":"grayscale(100%) opacity(0.8)",});
         // hide all other dialogs first
         $('.ui-dialog-content').dialog('close');
 	      // then open targeting dialog
         $(dlgID).dialog('open');
 	      // highligh current button also
-	      $(this).css({"-webkit-filter":"grayscale(0%)"});
+	      //$(this).css({"-webkit-filter":"grayscale(0%)"});
       });
     };
 
@@ -128,7 +128,7 @@ var Toolbar = (function($, FileDlg){
     });
 
     $('#btnSpreg').click(function(){
-	  $('.ui-dialog-content').dialog('close');
+	    $('.ui-dialog-content').dialog('close');
       $('#dialog-regression').dialog('open');
     });
 
