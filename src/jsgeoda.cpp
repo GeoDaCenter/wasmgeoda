@@ -8,12 +8,14 @@
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
+#include <boost/algorithm/string.hpp>
 
 #include "sa/UniLocalMoran.h"
 #include "sa/UniG.h"
 #include "sa/UniGstar.h"
 #include "sa/UniGeary.h"
 #include "sa/UniJoinCount.h"
+#include "GenUtils.h"
 #include "geojson.h"
 #include "gda_weights.h"
 #include "gda_sa.h"
@@ -392,6 +394,28 @@ std::vector<std::vector<int> > maxp(const std::string map_uid, const std::string
     return std::vector<std::vector<int> >();
 }
 
+std::vector<double> custom_breaks(const std::string map_uid, int k, std::string col_name,
+        std::string break_name)
+{
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        std::vector<bool> undef;
+        std::vector<double> data = json_map->GetNumericCol(col_name);
+        if (boost::iequals(break_name, "natural_breaks")) {
+            return GenUtils::NaturalBreaks(k, data, undef);
+        } else if (boost::iequals(break_name, "quantile_breaks")) {
+            return GenUtils::QuantileBreaks(k, data, undef);
+        } else if (boost::iequals(break_name, "stddev_breaks")) {
+            return GenUtils::StddevBreaks(k, data, undef);
+        } else if (boost::iequals(break_name, "hinge15_breaks")) {
+            return GenUtils::Hinge15Breaks(k, data, undef);
+        } else if (boost::iequals(break_name, "hinge30_breaks")) {
+            return GenUtils::Hinge30Breaks(k, data, undef);
+        }
+    }
+    return std::vector<double>();
+}
+
 #ifdef __JSGEODA__
 //Using this command to compile
 //  emcc --bind -O3 readFile.cpp -s WASM=1 -s TOTAL_MEMORY=268435456 -o api.js --std=c++11
@@ -454,6 +478,8 @@ EMSCRIPTEN_BINDINGS(my_module) {
 
     emscripten::function("redcap", &redcap);
     emscripten::function("maxp", &maxp);
+
+    emscripten::function("custom_breaks", &custom_breaks);
 }
 
 int main() {

@@ -310,7 +310,14 @@ namespace GenUtils {
     bool StandardizeData(int nObs, double* data, vector<bool>& undef);
 	bool StandardizeData(vector<double>& data);
     bool StandardizeData(vector<double>& data, vector<bool>& undef);
-    
+
+    std::vector<double>  NaturalBreaks(int k, vector<double>& data, vector<bool>& undef);
+    std::vector<double>  QuantileBreaks(int k, vector<double>& data, vector<bool>& undef);
+    std::vector<double>  Hinge15Breaks(int k, vector<double>& data, vector<bool>& undef);
+    std::vector<double>  Hinge30Breaks(int k, vector<double>& data, vector<bool>& undef);
+    std::vector<double>  PercentileBreaks(int k, vector<double>& data, vector<bool>& undef);
+    std::vector<double>  StddevBreaks(int k, vector<double>& data, vector<bool>& undef);
+
     double Correlation(vector<double>& x, vector<double>& y);
     double GetVariance(vector<double>& data);
 

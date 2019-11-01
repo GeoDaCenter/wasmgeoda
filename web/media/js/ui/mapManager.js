@@ -143,6 +143,14 @@ function($, ShpReader, ShapeFileMap, GeoJson, GeoJsonMap, MapCanvas) {
       return result;
     }
 
+    parseVecDouble(vd) {
+      let result = []
+      for (let i=0; i<vd.size(); ++i) {
+        result.push( vd.get(i));
+      }
+      return result;
+    }
+
     toVecString(input) {
       let vs = new Module.VectorString();
       for (let i=0; i<input.length; ++i) {
@@ -163,6 +171,46 @@ function($, ShpReader, ShapeFileMap, GeoJson, GeoJsonMap, MapCanvas) {
       let clusters_vec = Module.maxp(map_uid, weight_uid, col_names, bound_var, min_bound, tabu_length, cool_rate, method, k, n_iter);
       let clusters = this.parseVecVecInt(clusters_vec);
       return clusters;
+    }
+
+    custom_breaks(map_uid, break_name, k, sel_field, values) {
+      let breaks_vec = Module.custom_breaks(map_uid, k, sel_field, break_name);
+      let breaks = this.parseVecDouble(breaks_vec);
+
+      let bins = [];
+      let id_array = [];
+      for (let i=0; i<breaks.length; ++i) {
+        id_array.push([]);
+        bins.push(" < " + breaks[i]);
+      }
+      id_array.push([]);
+      bins.push(">= " + breaks[breaks.length-1]);
+
+      breaks.unshift(Number.NEGATIVE_INFINITY);
+      breaks.push(Number.POSITIVE_INFINITY);
+
+      for (let i=0; i<values.length; ++i) {
+        let v = values[i];
+        for (let j=0; j<breaks.length -1; ++j) {
+          let min_val = breaks[j];
+          let max_val = breaks[j+1];
+          if ( v >= min_val && v < max_val) {
+            id_array[j].push(i);
+            break;
+          }
+        }
+      }
+
+      for (let i =0; i<bins.length; ++i) {
+        bins[i] += " (" + id_array[i].length + ')';
+      }
+
+      return {
+        'k' : k,
+        'bins' : bins,
+        'id_array' : id_array,
+        'col_name' : sel_field
+      }
     }
   }
 
