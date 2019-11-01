@@ -37,3 +37,4 @@ src/cmake-build-debug
 .idea/
 cmake-build-debug/
 3rd_party/boost-1.70.0/
+*.swp
