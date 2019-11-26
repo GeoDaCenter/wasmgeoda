@@ -482,21 +482,19 @@ EMSCRIPTEN_BINDINGS(my_module) {
     emscripten::function("custom_breaks", &custom_breaks);
 }
 
-int main() {
-    /*
-    std::cout << "print_json" << std::endl;
-    std::string file_path = "../data/Guerry.geojson";
-    GdaGeojson gda(file_path);
-    geojson_maps["Guerry.geojson"] = &gda;
-    WeightsResult r = queen_weights("Guerry.geojson",1,0,0);
-    std::vector<std::string> col_names = {"Crm_prs", "Crm_prp", "Litercy", "Donatns", "Infants", "Suicids"};
-    std::vector<std::vector<int> > clt = skater("Guerry.geojson", r.uid, 4, col_names, "", -1);
-    */
-    return 0;
-}
 
 #endif
 
+int main() {
+    std::cout << "print_json" << std::endl;
+    std::string file_path = "../data/sfcrime.geojson";
+    GdaGeojson gda(file_path.c_str());
+    geojson_maps["Guerry.geojson"] = &gda;
+    WeightsResult r = queen_weights("Guerry.geojson",1,0,0);
+    //std::vector<std::string> col_names = {"Crm_prs", "Crm_prp", "Litercy", "Donatns", "Infants", "Suicids"};
+    //std::vector<std::vector<int> > clt = skater("Guerry.geojson", r.uid, 4, col_names, "", -1);
+    return 0;
+}
 
 void print_json(char* content) {
 	std::cout << "print_json" << std::endl;

@@ -445,6 +445,7 @@ var Manager = (function(window){
     return {
       // public
       AddGeoDa : function(map_uid, bytes_data) {
+        
         var gda_proxy = new GeodaProxy();
         gda_proxy.ReadGeojsonMap(map_uid, bytes_data);
         geoda_dict[map_uid]  = gda_proxy;

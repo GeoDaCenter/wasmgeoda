@@ -462,7 +462,15 @@ var OpenFileDlg = (function() {
           return;
         }  // end if (suffix==zip)
         else if (suffix === 'geojson') {
-          let reader = new FileReader();
+          // run wasm in web worker
+          let breader = new FileReader();
+	        breader.map_uid = f.name;
+
+          function b_callback(evt) {
+            let map_uid = evt.target.map_uid;
+            MapManager.getInstance().AddGeoDa(map_uid, evt.target);
+            
+            let reader = new FileReader();
           reader.map_uid = f.name;
           function callback(evt) {
             var data = {
@@ -492,19 +500,10 @@ var OpenFileDlg = (function() {
           }
           reader.onload = callback;
           reader.readAsText(f);
-
-          // run wasm in web worker
-          let breader = new FileReader();
-	        breader.map_uid = f.name;
-
-          function b_callback(evt) {
-            let map_uid = evt.target.map_uid;
-            MapManager.getInstance().AddGeoDa(map_uid, evt.target);
-            
+          
           }
           breader.onload = b_callback;
           breader.readAsArrayBuffer(f);
-          
           return;
         }
       } // end for()

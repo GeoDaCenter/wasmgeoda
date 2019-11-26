@@ -56,7 +56,7 @@ if (USE_EMCC)
 	SET(CMAKE_C_COMPILER /Users/xunli/Downloads/emsdk/fastcomp/emscripten/emcc)
 	SET(CMAKE_CPP_COMPILER /Users/xunli/Downloads/emsdk/fastcomp/emscripten/em++)
 	SET(CMAKE_CXX_COMPILER /Users/xunli/Downloads/emsdk/fastcomp/emscripten/em++)
-	set( CMAKE_CXX_FLAGS "-Os -s TOTAL_MEMORY=181207040 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=8 -s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
+	set( CMAKE_CXX_FLAGS "-s DISABLE_EXCEPTION_CATCHING=0 -s TOTAL_MEMORY=181207040 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=8 -s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
 endif()
 
 # specify the project
@@ -64,6 +64,7 @@ add_executable(${TARGET_NAME} ${src})
 
 if (USE_EMCC)
 	target_compile_definitions(${TARGET_NAME} PRIVATE __JSGEODA__=1)
+	target_compile_definitions(${TARGET_NAME} PRIVATE EMCC_DEBUG=1)
 else()
 	target_include_directories(${TARGET_NAME} PUBLIC ${BOOST_INCLUDE_DIR} )
 endif()

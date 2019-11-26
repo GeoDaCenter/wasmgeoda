@@ -102,7 +102,9 @@ function(_, $,
   ui.RegistToolbar(toolbar);
 
   // dialogs
-  var fileDlg = FileDlg.getInstance();
+  Module.onRuntimeInitialized = function() {
+    var fileDlg = FileDlg.getInstance();
+  }
 
   $('#divPop').hide();
 
