@@ -604,7 +604,7 @@ input.search {
   position: absolute;
   right: 10px;
   bottom: 60px;
-  opacity: 0.0;
+  opacity: 0;
   width: 100px;
   height: 100px;
   cursor: hand;
@@ -1117,4 +1117,29 @@ ul.mvcheckbox li.focus  {
   text-align: left;
   background-color: #4CAF50;
   color: white;
+}
+
+#tabs-dlg-open-file {
+  visibility :hidden;
+}
+
+.covid-entry {
+  width: 100%;
+  height: 80px;
+  background-color: #CCCCCC;
+  color: #af7676;
+  vertical-align: middle;
+  font-size: 2.8em;
+  padding-top: 50px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+#covid_china {
+  color: #b3b3b3;
+}
+
+.covid-entry:hover {
+  background-color: #942a25;
+  color: #FFFFFF;
 }

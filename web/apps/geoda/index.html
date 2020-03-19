@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="../../media/css/jquery.dataTables.min.css" />
 <link rel="stylesheet" href="../../media/asserts/css/font-awesome.min.css" />
 <link rel="stylesheet" href="../../media/css/jquery.colorpicker.min.css" />
-<link rel="stylesheet" href="../../media/css/gridstack.css" />
+<!--<link rel="stylesheet" href="../../media/css/gridstack.css" />-->
 <link rel="stylesheet" href="../../media/css/cartodb.css" />
 <link rel="stylesheet" href="../../media/css/portal.css" />
 
@@ -200,7 +200,14 @@
   // Open Files
   ///////////////////////////////////////////////////////////////////////////////
   -->
-  <div id="dialog-open-file"  title="Let's get started">
+  <div id="dialog-open-file"  title="Mapping COVID19">
+
+	  <div class="covid-entry" id="covid_usa">United States of America</div>
+	  <div class="covid-entry" id="covid_canada">Canada</div>
+	  <div class="covid-entry" id="covid_china">China (Mainland)</div>
+	  <div><br/><br/>Data from: https://coronavirus.1point3acres.com/</div>
+	  <div class="gda-prg-bar" id="progress_bar_openfile"><img src="../../media/img/progress-bar.gif"></div>
+
     <div id="tabs-dlg-open-file" class="centered">
       <ul>
 		  <li><a href="#tabs-1">Load your map files:</a></li>
@@ -252,7 +259,6 @@
 			</tr>
 		</table>
 	</div>
-    <div class="gda-prg-bar" id="progress_bar_openfile"><img src="../../media/img/progress-bar.gif"></div>
   </div>
 
   <!--

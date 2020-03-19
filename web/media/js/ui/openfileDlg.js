@@ -96,6 +96,18 @@ var OpenFileDlg = (function() {
         });
     }
 
+    $('#covid_usa').click(function(e){
+      $.ajax({
+        url:  "https://webgeoda.github.io/data/states.geojson",
+        dataType :  'text',
+        beforeSend : function(xhr) {
+          $('#progress_bar_openfile').show();
+        },
+        success : function(content) {
+          load_geojson("states.geojson",content);
+        }
+      });
+    });
     $('#sample_guerry').click(function(e){
       $.ajax({
         url:  "https://webgeoda.github.io/data/guerry.geojson",
@@ -292,13 +304,13 @@ var OpenFileDlg = (function() {
         if (bAccepts)
           $( '#btnOpenData').css("opacity", "0.2");
         else
-          $( '#btnOpenData').css("opacity", "1.0");
+          $( '#btnOpenData').css("opacity", "0");
       },
       buttons: [
-        {text: "OK",click: OnOKClick,},
+        //{text: "OK",click: OnOKClick,},
         {text: "Close",click: function() {
             $( this ).dialog( "close" );
-            $( '#btnOpenData').css("opacity", "1.0");
+            $( '#btnOpenData').css("opacity", "0");
           }
         }
       ]

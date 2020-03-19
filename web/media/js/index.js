@@ -33,7 +33,7 @@ require.config({
     'jquery.slidereveal' : 'lib/jquery.slidereveal.min',
     'jquery.chosen' : 'lib/jquery.chosen.min',
     'jquery.textarea-markdown-editor' : 'lib/jquery.textarea-markdown-editor',
-    gridstack : 'lib/gridstack.min',
+    //gridstack : 'lib/gridstack.min',
 
     'list' : 'lib/list.min',
     'colorbrewer'  : 'lib/colorbrewer',
@@ -56,7 +56,7 @@ require.config({
     "jquery.switchButton" : {deps: ['jquery']},
     "jquery.colorpicker" : {deps: ['jquery']},
     "jquery.ui.touch-punch" : {deps: ['jqueryui']},
-    gridstack : {deps: ['lodash', 'jqueryui']},
+    //gridstack : {deps: ['lodash', 'jqueryui']},
     "list" : {},
     'colorbrewer': {},
     ss : {exports : 'ss'},
