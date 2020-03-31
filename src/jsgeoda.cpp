@@ -15,6 +15,8 @@
 #include "sa/UniGstar.h"
 #include "sa/UniGeary.h"
 #include "sa/UniJoinCount.h"
+#include "clustering/DorlingCartogram.h"
+#include "weights/GalWeight.h"
 #include "GenUtils.h"
 #include "geojson.h"
 #include "gda_weights.h"
@@ -23,6 +25,8 @@
 
 extern "C" {
 	void print_json(char* content);
+    //void new_geojsonmap(const char* file_name, const char* addr, const size_t & len);
+    void new_geojsonmap1(const char* file_name, uint8_t* data, size_t len);
 }
 
 auto geojson_maps = std::map<std::string, GdaGeojson*>(); 
@@ -48,19 +52,30 @@ void free_geojsonmap()
  * 			all jsgeoda APIs. e.g. queen_weights(map_uid)
  * 
  */
-void new_geojsonmap(std::string file_name, const int & addr, const size_t & len){
+void new_geojsonmap(std::string file_name, const int & addr, const size_t & len) {
 	//We get out pointer as a plain int from javascript
 	//We use a reinterpret_cast to turn our plain int into a uint8_t pointer. After
 	//which we can play with the data just like we would normally.
 	char* data = reinterpret_cast<char*>(addr);
+    //std::cout << "new_geojsonmap():" << file_name << len << "," << data[0] << std::endl;
 
-	std::cout << "new_geojsonmap():" << file_name << std::endl;
 	GdaGeojson *json_map = new GdaGeojson(file_name.c_str(), data);
 
 	// store globally, has to be release by calling free_geojsonmap()
 	geojson_maps[file_name] = json_map;
 }
 
+void new_geojsonmap1(const char* file_name, uint8_t* in, size_t len) {
+    char* data = new char[len+1];
+    for (size_t i=0; i<len;++i) {
+        data[i] = in[i];
+        if (i == len-1)
+        std::cout << data[i];
+    }
+    data[len] = '\0';
+    GdaGeojson *json_map = new GdaGeojson(file_name, data);
+    geojson_maps[std::string(file_name)] = json_map;
+}
 
 int get_num_obs(std::string map_uid) {
 	std::cout << "get_num_obs()" << map_uid << std::endl;
@@ -80,6 +95,13 @@ int get_map_type(std::string map_uid) {
 	}
 	return 0;
 }
+
+struct CCentroids {
+    std::vector<double> x;
+    std::vector<double> y;
+    std::vector<double> get_x() { return x;}
+    std::vector<double> get_y() { return y;}
+};
 
 struct WeightsResult {
     int weight_type;
@@ -119,6 +141,25 @@ void set_weights_content(GeoDaWeight* w, WeightsResult& rst)
         rst.sparsity = w->sparsity;
         rst.uid = w->uid;
     }
+}
+
+CCentroids get_centroids(std::string map_uid)
+{
+    CCentroids ct;
+
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        const std::vector<gda::Point>& pts = json_map->GetCentroids();
+        size_t num_obs = json_map->GetNumObs();
+        ct.x.resize(num_obs);
+        ct.y.resize(num_obs);
+
+        for (size_t i=0; i<num_obs; ++i) {
+            ct.x[i] = pts[i].x;
+            ct.y[i] = pts[i].y;
+        }
+    }
+    return ct;
 }
 
 WeightsResult queen_weights(std::string map_uid, int order, int include_lower_order, double precision_threshold)
@@ -271,6 +312,22 @@ LisaResult local_moran(const std::string map_uid, const std::string weight_uid, 
     return rst;
 }
 
+LisaResult local_moran1(const std::string map_uid, const std::string weight_uid, std::vector<double> vals)
+{
+    LisaResult rst;
+
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GeoDaWeight *w = json_map->GetWeights(weight_uid);
+        if (w) {
+            UniLocalMoran* lisa = gda_localmoran(w, vals);
+            set_lisa_content(lisa, rst);
+            delete lisa;
+        }
+    }
+    return rst;
+}
+
 LisaResult local_g(const std::string map_uid, const std::string weight_uid, std::string col_name)
 {
     LisaResult rst;
@@ -416,6 +473,68 @@ std::vector<double> custom_breaks(const std::string map_uid, int k, std::string 
     return std::vector<double>();
 }
 
+std::vector<double> custom_breaks1(const std::string map_uid, int k,
+                                  std::string break_name, std::vector<double> data)
+{
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        std::vector<bool> undef;
+        if (boost::iequals(break_name, "natural_breaks")) {
+            return GenUtils::NaturalBreaks(k, data, undef);
+        } else if (boost::iequals(break_name, "quantile_breaks")) {
+            return GenUtils::QuantileBreaks(k, data, undef);
+        } else if (boost::iequals(break_name, "stddev_breaks")) {
+            return GenUtils::StddevBreaks(k, data, undef);
+        } else if (boost::iequals(break_name, "hinge15_breaks")) {
+            return GenUtils::Hinge15Breaks(k, data, undef);
+        } else if (boost::iequals(break_name, "hinge30_breaks")) {
+            return GenUtils::Hinge30Breaks(k, data, undef);
+        }
+    }
+    return std::vector<double>();
+}
+
+struct CartogramResult {
+    std::vector<double> x;
+    std::vector<double> y;
+    std::vector<double> r;
+
+    std::vector<double> get_x() { return x;}
+    std::vector<double> get_y() { return y;}
+    std::vector<double> get_radius() { return r;}
+};
+
+CartogramResult cartogram(const std::string map_uid, std::vector<double> values)
+{
+    CartogramResult r;
+
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GalWeight* w = (GalWeight*)json_map->CreateRookWeights(1, false, 0);
+        int num_obs = w->num_obs;
+        const std::vector<gda::Point>& cents = json_map->GetCentroids();
+        CartNbrInfo* cart_nbr_info = new CartNbrInfo(w->gal, num_obs);
+        std::vector<double> x(num_obs), y(num_obs);
+        double orig_data_min=values[0], orig_data_max = values[0];
+        for (size_t i=0; i<num_obs; ++i) {
+            x[i] = cents[i].x;
+            y[i] = cents[i].y;
+            if (orig_data_min > values[i]) orig_data_min = values[i];
+            if (orig_data_max < values[i]) orig_data_max = values[i];
+        }
+        DorlingCartogram* cartogram = new DorlingCartogram(cart_nbr_info, x, y, values, orig_data_min, orig_data_max);
+        cartogram->improve(100);
+
+
+        for (size_t i=0; i<num_obs; i++) {
+            r.x.push_back(cartogram->output_x[i]);
+            r.y.push_back(cartogram->output_y[i]);
+            r.r.push_back(cartogram->output_radius[i]);
+        }
+    }
+    return r;
+}
+
 #ifdef __JSGEODA__
 //Using this command to compile
 //  emcc --bind -O3 readFile.cpp -s WASM=1 -s TOTAL_MEMORY=268435456 -o api.js --std=c++11
@@ -432,6 +551,17 @@ EMSCRIPTEN_BINDINGS(my_module) {
     emscripten::register_vector<double>("VectorDouble");
 
     emscripten::register_map<std::string, std::vector<float> >("map<string, vector<float>>");
+
+    emscripten::class_<CCentroids>("CCentroids")
+        .function("get_x", &CCentroids::get_x)
+        .function("get_y", &CCentroids::get_y)
+        ;
+
+    emscripten::class_<CartogramResult>("CartogramResult")
+        .function("get_x", &CartogramResult::get_x)
+        .function("get_y", &CartogramResult::get_y)
+        .function("get_radius", &CartogramResult::get_radius)
+        ;
 
     emscripten::class_<LisaResult>("LisaResult")
         .function("significances", &LisaResult::get_sig_local)
@@ -471,6 +601,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
     emscripten::function("kernel_bandwidth_weights", &kernel_bandwidth_weights);
 
     emscripten::function("local_moran", &local_moran);
+    emscripten::function("local_moran1", &local_moran1);
     emscripten::function("local_g", &local_g);
     emscripten::function("local_gstar", &local_gstar);
     emscripten::function("local_geary", &local_geary);
@@ -480,6 +611,10 @@ EMSCRIPTEN_BINDINGS(my_module) {
     emscripten::function("maxp", &maxp);
 
     emscripten::function("custom_breaks", &custom_breaks);
+    emscripten::function("custom_breaks1", &custom_breaks1);
+    emscripten::function("get_centroids", &get_centroids);
+    emscripten::function("cartogram", &cartogram);
+
 }
 
 
@@ -491,6 +626,7 @@ int main() {
     GdaGeojson gda(file_path.c_str());
     geojson_maps["Guerry.geojson"] = &gda;
     WeightsResult r = queen_weights("Guerry.geojson",1,0,0);
+    CCentroids c = get_centroids("Guerry.geojson");
     //std::vector<std::string> col_names = {"Crm_prs", "Crm_prp", "Litercy", "Donatns", "Infants", "Suicids"};
     //std::vector<std::vector<int> > clt = skater("Guerry.geojson", r.uid, 4, col_names, "", -1);
     return 0;

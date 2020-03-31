@@ -262,25 +262,35 @@ std::vector<double> GdaGeojson::GetNumericCol(std::string col_name)
 
 void GdaGeojson::Read(const char* file_name, const char* in_content)
 {
+    std::string tmp;
+    tmp = file_name;
+    //std::cout <<"GdaGeojson::Read()" << tmp << in_content << std::endl;
     rapidjson::Document json;
     json.Parse(in_content);
 
-    if (!json.IsObject())
+
+    if (!json.IsObject()) {
+        std::cout <<"Geometry must be an object"<< std::endl;
         throw error("Geometry must be an object");
+    }
 
     const auto &json_end = json.MemberEnd();
 
     const auto &features_itr = json.FindMember("features");
-    if (features_itr == json_end)
+    if (features_itr == json_end) {
+        std::cout <<"Content of features not found"<< std::endl;
         throw error("Content of features not found");
+    }
 
     const auto &features = features_itr->value;
 
+    //std::cout <<"GdaGeojson::readFeatureCollection()"<< std::endl;
     this->readFeatureCollection(features);
 }
 
 void GdaGeojson::readFeatureCollection(const rapidjson::Value& features)
 {
+    //std::cout <<"GdaGeojson::readFeatureCollection()"<< std::endl;
     /*
     {
         "type": "Feature",
@@ -302,6 +312,9 @@ void GdaGeojson::readFeatureCollection(const rapidjson::Value& features)
 
     const auto &fa = features.GetArray();
     this->main_map.num_obs = fa.Size();
+
+    std::cout <<"GdaGeojson::readFeatureCollection(): n="<< fa.Size() << std::endl;
+
     for (size_t i=0; i<fa.Size(); ++i) {
         const rapidjson::Value &geom = fa[i]["geometry"];
         //std::cout << fa[i]["properties"]["POLY_ID"].GetInt() <<std::endl;
@@ -326,6 +339,7 @@ void GdaGeojson::readFeatureCollection(const rapidjson::Value& features)
             this->createGeometryFeature(i, geom);
         }
     }
+    std::cout <<"GdaGeojson::readFeatureCollection(): done"<< std::endl;
 }
 
 void GdaGeojson::createGeometryFeature(size_t i, const rapidjson::Value& geom)

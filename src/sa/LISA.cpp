@@ -10,6 +10,7 @@
 
 #include "LISA.h"
 
+#ifndef __NO_THREAD__
 #ifdef _WIN32
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
@@ -30,6 +31,7 @@ void* lisa_thread_helper(void* voidArgs)
     return 0;
 }
 #endif
+#endif //__NO_THREAD__
 
 
 LISA::LISA(int num_obs, GeoDaWeight* w)
@@ -168,11 +170,17 @@ bool LISA::GetHasUndefined()
 void LISA::CalcPseudoP()
 {
     if (!calc_significances) return;
+
+#ifdef __NO_THREAD__
+    CalcPseudoP_range(0, num_obs-1, last_seed_used);
+#else
     CalcPseudoP_threaded();
+#endif
 }
 
 void LISA::CalcPseudoP_threaded()
 {
+#ifndef __NO_THREAD__
 #ifdef _WIN32
     int nCPUs = boost::thread::hardware_concurrency();;
     boost::thread_group threadPool;
@@ -231,6 +239,8 @@ void LISA::CalcPseudoP_threaded()
         pthread_join(threadPool[j], NULL);
     }
 #endif
+
+#endif // __NO_THREAD__
 }
 
 void LISA::CalcPseudoP_range(int obs_start, int obs_end, uint64_t seed_start)
