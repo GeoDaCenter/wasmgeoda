@@ -396,6 +396,22 @@ LisaResult local_joincount(const std::string map_uid, const std::string weight_u
     return rst;
 }
 
+std::vector<int> get_neighbors(const std::string map_uid, const std::string weight_uid, int id)
+{
+    std::vector<int> nbrs;
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GeoDaWeight *w = json_map->GetWeights(weight_uid);
+        if (w) {
+            const  std::vector<long>& _nbrs = w->GetNeighbors(id);
+            for (size_t i=0; i<_nbrs.size(); ++i) {
+                nbrs.push_back(_nbrs[i]);
+            }
+        }
+    }
+    return nbrs;
+}
+
 std::vector<std::vector<int> > redcap(const std::string map_uid, const std::string weight_uid,
         int k, std::vector<std::string> sel_names, std::string bound_var, double min_bound,
         std::string method)
@@ -614,7 +630,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
     emscripten::function("custom_breaks1", &custom_breaks1);
     emscripten::function("get_centroids", &get_centroids);
     emscripten::function("cartogram", &cartogram);
-
+    emscripten::function("get_neighbors", &get_neighbors);
 }
 
 
