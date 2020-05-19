@@ -58,8 +58,9 @@ if (USE_EMCC)
 	SET(CMAKE_C_COMPILER /Users/xunli/Downloads/emsdk/fastcomp/emscripten/emcc)
 	SET(CMAKE_CPP_COMPILER /Users/xunli/Downloads/emsdk/fastcomp/emscripten/em++)
 	SET(CMAKE_CXX_COMPILER /Users/xunli/Downloads/emsdk/fastcomp/emscripten/em++)
-	#set( CMAKE_CXX_FLAGS "-s DISABLE_EXCEPTION_CATCHING=0 -s TOTAL_MEMORY=181207040 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=8 -s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
-	set( CMAKE_CXX_FLAGS "-O2 -s ALLOW_MEMORY_GROWTH=1 -s DISABLE_EXCEPTION_CATCHING=0 -s TOTAL_MEMORY=181207040 -s USE_PTHREADS=0 -s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
+	#set( CMAKE_CXX_FLAGS "-O3 -s TOTAL_MEMORY=1812070400 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=16 -s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
+	#set( CMAKE_CXX_FLAGS "-s DISABLE_EXCEPTION_CATCHING=0 -s TOTAL_MEMORY=1812070400 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=8 -s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
+	set( CMAKE_CXX_FLAGS "-O2 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=200MB -s USE_PTHREADS=0 -s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
 endif()
 
 # specify the project

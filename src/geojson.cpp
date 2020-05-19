@@ -19,6 +19,7 @@ GdaGeojson::GdaGeojson(const std::string& file_path)
         : GdaGeojson()
 {
 #ifndef __JSGEODA__
+    this->file_path = file_path;
     std::string filename = file_path.substr(file_path.find_last_of("/") + 1);
 
     FILE *fp;
@@ -51,6 +52,7 @@ GdaGeojson::GdaGeojson(const std::string& file_path)
 GdaGeojson::GdaGeojson(const char* file_name, const char* in_content)
 : GdaGeojson()
 {
+    this->file_path = file_name;
     this->Read(file_name, in_content);
 }
 
@@ -113,6 +115,7 @@ GeoDaWeight* GdaGeojson::CreateQueenWeights(unsigned int order,
 {
     std::stringstream w_uid;
     w_uid << "w_queen";
+    w_uid << this->file_path;
     w_uid << order;
     w_uid << include_lower_order;
     w_uid << precision_threshold;
@@ -134,6 +137,7 @@ GeoDaWeight* GdaGeojson::CreateRookWeights(unsigned int order,
 {
     std::stringstream w_uid;
     w_uid << "w_rook";
+    w_uid << this->file_path;
     w_uid << order;
     w_uid << include_lower_order;
     w_uid << precision_threshold;
@@ -157,6 +161,7 @@ GeoDaWeight* GdaGeojson::CreateKnnWeights(unsigned int k,
 {
     std::stringstream w_uid;
     w_uid << "w_knn";
+    w_uid << this->file_path;
     w_uid << k;
     w_uid << power;
     w_uid << is_inverse;
@@ -183,6 +188,7 @@ GeoDaWeight* GdaGeojson::CreateDistanceWeights(double dist_thres,
 {
     std::stringstream w_uid;
     w_uid << "w_dist";
+    w_uid << this->file_path;
     w_uid << dist_thres;
     w_uid << power;
     w_uid << is_inverse;
@@ -207,6 +213,7 @@ GeoDaWeight* GdaGeojson::CreateKernelWeights(double dist_thres,
 {
     std::stringstream w_uid;
     w_uid << "w_kernel";
+    w_uid << this->file_path;
     w_uid << dist_thres;
     w_uid << kernel;
     w_uid << use_kernel_diagonals;
@@ -232,6 +239,7 @@ GeoDaWeight* GdaGeojson::CreateKernelWeights(unsigned int k,
 {
     std::stringstream w_uid;
     w_uid << "w_kernel";
+    w_uid << this->file_path;
     w_uid << k;
     w_uid << kernel;
     w_uid << adaptive_bandwidth;

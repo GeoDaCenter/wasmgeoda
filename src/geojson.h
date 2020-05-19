@@ -74,7 +74,11 @@ public:
 
     double GetMinDistanceThreshold(bool is_arc, bool is_mile);
 
+    std::string GetFilePath() const { return file_path; }
+
 protected:
+    std::string file_path;
+
     gda::MainMap main_map;
 
     std::map<std::string, std::vector<double> > data_numeric;

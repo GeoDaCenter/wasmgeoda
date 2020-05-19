@@ -10,37 +10,20 @@
 
 #include "LISA.h"
 
-#ifndef __NO_THREAD__
-#ifdef _WIN32
-#include <boost/thread.hpp>
-#include <boost/bind.hpp>
-#else
-#include <pthread.h>
-
-struct lisa_thread_args {
-    LISA *lisa;
-    int start;
-    int end;
-    uint64_t seed_start;
-};
-
-void* lisa_thread_helper(void* voidArgs)
-{
-    lisa_thread_args *args = (lisa_thread_args*)voidArgs;
-    args->lisa->CalcPseudoP_range(args->start, args->end, args->seed_start);
-    return 0;
-}
-#endif
-#endif //__NO_THREAD__
-
+std::map<std::string, bool>  LISA::has_cached_perm;
+std::map<std::string, std::vector<std::vector<int> > >  LISA::cached_perm_nbrs;
 
 LISA::LISA(int num_obs, GeoDaWeight* w)
-: nCPUs(8), last_seed_used(123456789),
+: last_seed_used(123456789),
   permutations(999), reuse_last_seed(true),
   calc_significances(true),row_standardize(true),
   has_undefined(false), has_isolates(w->HasIsolates()),
   user_sig_cutoff(0), weights(w), num_obs(num_obs)
 {
+    if (has_cached_perm.find(w->GetUID()) == has_cached_perm.end()) {
+        has_cached_perm[w->GetUID()] = false;
+        cached_perm_nbrs[w->GetUID()] = std::vector<std::vector<int> >(0);
+    }
     SetSignificanceFilter(1);
 }
 
@@ -171,82 +154,26 @@ void LISA::CalcPseudoP()
 {
     if (!calc_significances) return;
 
-#ifdef __NO_THREAD__
     CalcPseudoP_range(0, num_obs-1, last_seed_used);
-#else
-    CalcPseudoP_threaded();
-#endif
+
+    if (has_cached_perm[weights->GetUID()] == false) {
+        has_cached_perm[weights->GetUID()] = true;
+    }
 }
 
 void LISA::CalcPseudoP_threaded()
 {
-#ifndef __NO_THREAD__
-#ifdef _WIN32
-    int nCPUs = boost::thread::hardware_concurrency();;
-    boost::thread_group threadPool;
-#else
-    int nCPUs = 8;
-    pthread_t threadPool[nCPUs];
-    struct lisa_thread_args args[nCPUs];
-#endif
 
-    // divide up work according to number of observations
-    // and number of CPUs
-    int work_chunk = num_obs / nCPUs;
-
-    if (work_chunk == 0) work_chunk = 1;
-
-    int obs_start = 0;
-    int obs_end = obs_start + work_chunk;
-
-    int quotient = num_obs / nCPUs;
-    int remainder = num_obs % nCPUs;
-    int tot_threads = (quotient > 0) ? nCPUs : remainder;
-
-    if (!reuse_last_seed) last_seed_used = time(0);
-
-    for (int i=0; i<tot_threads; i++) {
-        int a=0;
-        int b=0;
-        if (i < remainder) {
-            a = i*(quotient+1);
-            b = a+quotient;
-        } else {
-            a = remainder*(quotient+1) + (i-remainder)*quotient;
-            b = a+quotient-1;
-        }
-        uint64_t seed_start = last_seed_used+a;
-        uint64_t seed_end = seed_start + ((uint64_t) (b-a));
-        int thread_id = i+1;
-
-#ifdef _WIN32
-        boost::thread* worker = new boost::thread(boost::bind(&LISA::CalcPseudoP_range,this, a, b, seed_start));
-        threadPool.add_thread(worker);
-#else
-        args[i].lisa = this;
-        args[i].start = a;
-        args[i].end = b;
-        args[i].seed_start = seed_start;
-        if (pthread_create(&threadPool[i], NULL, &lisa_thread_helper, &args[i])) {
-            perror("Thread create failed.");
-        }
-#endif
-    }
-#ifdef _WIN32
-    threadPool.join_all();
-#else
-    for (int j = 0; j < nCPUs; j++) {
-        pthread_join(threadPool[j], NULL);
-    }
-#endif
-
-#endif // __NO_THREAD__
 }
 
 void LISA::CalcPseudoP_range(int obs_start, int obs_end, uint64_t seed_start)
 {
     GeoDaSet workPermutation(num_obs);
     int max_rand = num_obs-1;
+
+    std::string wuid = weights->GetUID();
+    bool using_cache = has_cached_perm[wuid];
+    std::vector<std::vector<int> >& cache = cached_perm_nbrs[wuid];
 
     for (size_t cnt=obs_start; cnt<=obs_end; cnt++) {
 
@@ -258,28 +185,36 @@ void LISA::CalcPseudoP_range(int obs_start, int obs_end, uint64_t seed_start)
             continue;
         }
 
+
         std::vector<double> permutedSA(permutations, 0);
-        for (size_t perm=0; perm<permutations; perm++) {
-            int rand=0, newRandom;
-            double rng_val;
-            while (rand < numNeighbors) {
-                // computing 'perfect' permutation of given size
-                rng_val = Gda::ThomasWangHashDouble(seed_start++) * max_rand;
-                // round is needed to fix issue
-                // https://github.com/GeoDaCenter/geoda/issues/488
-                newRandom = (int)(rng_val<0.0?ceil(rng_val - 0.5):floor(rng_val + 0.5));
+        if (using_cache == false) {
+            for (size_t perm = 0; perm < permutations; perm++) {
+                int rand = 0, newRandom;
+                double rng_val;
+                while (rand < numNeighbors) {
+                    // computing 'perfect' permutation of given size
+                    rng_val = Gda::ThomasWangHashDouble(seed_start++) * max_rand;
+                    // round is needed to fix issue
+                    // https://github.com/GeoDaCenter/geoda/issues/488
+                    newRandom = (int) (rng_val < 0.0 ? ceil(rng_val - 0.5) : floor(rng_val + 0.5));
 
-                if (newRandom != cnt && !workPermutation.Belongs(newRandom) && weights->GetNbrSize(newRandom)>0) {
-                    workPermutation.Push(newRandom);
-                    rand++;
+                    if (newRandom != cnt && !workPermutation.Belongs(newRandom) && weights->GetNbrSize(newRandom) > 0) {
+                        workPermutation.Push(newRandom);
+                        rand++;
+                    }
                 }
-            }
-            std::vector<int> permNeighbors(numNeighbors);
-            for (int cp=0; cp<numNeighbors; cp++) {
-                permNeighbors[cp] = workPermutation.Pop();
-            }
+                std::vector<int> permNeighbors(numNeighbors);
+                for (int cp = 0; cp < numNeighbors; cp++) {
+                    permNeighbors[cp] = workPermutation.Pop();
+                }
+                cache.push_back(permNeighbors);
+                PermLocalSA(cnt, perm, permNeighbors, permutedSA);
 
-            PermLocalSA(cnt, perm, permNeighbors, permutedSA);
+            }
+        } else {
+            for (size_t perm = 0; perm < permutations; perm++) {
+                PermLocalSA(cnt, perm, cache[perm], permutedSA);
+            }
         }
 
         uint64_t countLarger = CountLargerSA(cnt, permutedSA);

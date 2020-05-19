@@ -27,9 +27,6 @@ var Module = {};
 
 // These modes need to assign to these variables because of how scoping works in them.
 
-function assert(condition, text) {
-  if (!condition) abort('Assertion failed: ' + text);
-}
 
 // When error objects propagate from Web Worker to main thread, they lose helpful call stack and thread ID information, so print out errors early here,
 // before that happens.
@@ -118,16 +115,8 @@ this.onmessage = function(e) {
       var max = e.data.stackBase + e.data.stackSize;
       var top = e.data.stackBase;
       Module['applyStackValues'](top, top, max);
-      assert(threadInfoStruct);
-      assert(selfThreadId);
-      assert(parentThreadId);
-      assert(top != 0);
-      assert(max > e.data.stackBase);
-      assert(max > top);
-      assert(e.data.stackBase === top);
       // Call inside asm.js/wasm module to set up the stack frame for this pthread in asm.js/wasm module scope
       Module['establishStackSpace'](e.data.stackBase, e.data.stackBase + e.data.stackSize);
-      Module['writeStackCookie']();
 
       PThread.receiveObjectTransfer(e.data);
       PThread.setThreadStatus(Module['_pthread_self'](), 1/*EM_THREAD_STATUS_RUNNING*/);
@@ -142,7 +131,6 @@ this.onmessage = function(e) {
         // flag -s EMULATE_FUNCTION_POINTER_CASTS=1 to add in emulation for this x86 ABI extension.
         var result = Module['dynCall_ii'](e.data.start_routine, e.data.arg);
 
-        Module['checkStackCookie']();
 
       } catch(e) {
         if (e === 'Canceled!') {
@@ -153,10 +141,6 @@ this.onmessage = function(e) {
         } else {
           Atomics.store(HEAPU32, (threadInfoStruct + 4 /*C_STRUCTS.pthread.threadExitCode*/ ) >> 2, (e instanceof Module['ExitStatus']) ? e.status : -2 /*A custom entry specific to Emscripten denoting that the thread crashed.*/);
           Atomics.store(HEAPU32, (threadInfoStruct + 0 /*C_STRUCTS.pthread.threadStatus*/ ) >> 2, 1); // Mark the thread as no longer running.
-          if (typeof(Module['_emscripten_futex_wake']) !== "function") {
-            err("Thread Initialisation failed.");
-            throw e;
-          }
           Module['_emscripten_futex_wake'](threadInfoStruct + 0 /*C_STRUCTS.pthread.threadStatus*/, 0x7FFFFFFF/*INT_MAX*/); // Wake all threads waiting on this thread to finish.
           if (!(e instanceof Module['ExitStatus'])) throw e;
         }
