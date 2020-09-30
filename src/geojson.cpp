@@ -4,8 +4,8 @@
 #include <limits>
 #include <boost/algorithm/string.hpp>
 
-#include "shape/centroid.h"
-#include "gda_weights.h"
+#include "../libgeoda_src/shape/centroid.h"
+#include "../libgeoda_src/gda_weights.h"
 #include "geojson.h"
 
 using error = std::runtime_error;
@@ -64,6 +64,12 @@ GdaGeojson::~GdaGeojson()
         delete it->second;
     }
     weights_dict.clear();
+
+    for (size_t i=0; i<centroids.size(); ++i) {
+        if (centroids[i]) {
+            delete centroids[i];
+        }
+    }
 }
 
 gda::MainMap& GdaGeojson::GetMainMap()
@@ -71,32 +77,32 @@ gda::MainMap& GdaGeojson::GetMainMap()
     return this->main_map;
 }
 
-int GdaGeojson::GetNumObs()
+int GdaGeojson::GetNumObs() const
 {
     return this->main_map.num_obs;
 }
 
-gda::ShapeType GdaGeojson::GetMapType()
+int GdaGeojson::GetMapType()
 {
     return this->main_map.shape_type;
 }
 
-const std::vector<gda::Point>& GdaGeojson::GetCentroids()
+const std::vector<gda::PointContents*>& GdaGeojson::GetCentroids()
 {
     if (this->centroids.empty()) {
         if (this->main_map.shape_type == gda::POINT_TYP) {
             this->centroids.resize(this->main_map.num_obs);
             for (size_t i=0; i<this->centroids.size(); ++i) {
                 gda::PointContents* pt = (gda::PointContents*)this->main_map.records[i];
-                this->centroids[i].x = pt->x;
-                this->centroids[i].y = pt->y;
+                this->centroids[i] = pt;
             }
         } else if (this->main_map.shape_type == gda::POLYGON) {
             this->centroids.resize(this->main_map.num_obs);
             for (size_t i=0; i<this->centroids.size(); ++i) {
                 gda::PolygonContents* poly = (gda::PolygonContents*)this->main_map.records[i];
                 Centroid cent(poly);
-                cent.getCentroid(this->centroids[i]);
+                this->centroids[i] = new gda::PointContents;
+                cent.getCentroid(*this->centroids[i]);
             }
         }
     }
@@ -106,7 +112,7 @@ const std::vector<gda::Point>& GdaGeojson::GetCentroids()
 
 double GdaGeojson::GetMinDistanceThreshold(bool is_arc, bool is_mile)
 {
-    return gda_min_distthreshold(this, is_arc, is_mile);
+    return gda_min_distthreshold((AbstractGeoDa*)this, is_arc, is_mile);
 }
 
 GeoDaWeight* GdaGeojson::CreateQueenWeights(unsigned int order, 
@@ -124,7 +130,7 @@ GeoDaWeight* GdaGeojson::CreateQueenWeights(unsigned int order,
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        w = gda_queen_weights(this, order, include_lower_order, precision_threshold);
+        w = gda_queen_weights((AbstractGeoDa*)this, order, include_lower_order, precision_threshold);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
@@ -146,7 +152,7 @@ GeoDaWeight* GdaGeojson::CreateRookWeights(unsigned int order,
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        w = gda_rook_weights(this, order, include_lower_order, precision_threshold);
+        w = gda_rook_weights((AbstractGeoDa*)this, order, include_lower_order, precision_threshold);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
@@ -173,7 +179,7 @@ GeoDaWeight* GdaGeojson::CreateKnnWeights(unsigned int k,
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        w = gda_knn_weights(this, k, power, is_inverse, is_arc, is_mile);
+        w = gda_knn_weights((AbstractGeoDa*)this, k, power, is_inverse, is_arc, is_mile);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
@@ -199,7 +205,7 @@ GeoDaWeight* GdaGeojson::CreateDistanceWeights(double dist_thres,
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        w = gda_distance_weights(this, dist_thres, "", power, is_inverse, is_arc, is_mile);
+        w = gda_distance_weights((AbstractGeoDa*)this, dist_thres, "", power, is_inverse, is_arc, is_mile);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
@@ -224,7 +230,7 @@ GeoDaWeight* GdaGeojson::CreateKernelWeights(double dist_thres,
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        w = gda_distance_weights(this, dist_thres, "", 1.0, false, is_arc, is_mile, kernel, use_kernel_diagonals);
+        w = gda_distance_weights((AbstractGeoDa*)this, dist_thres, "", 1.0, false, is_arc, is_mile, kernel, use_kernel_diagonals);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
@@ -251,7 +257,7 @@ GeoDaWeight* GdaGeojson::CreateKernelWeights(unsigned int k,
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        w = gda_knn_weights(this, k, 1.0, false, is_arc, is_mile, kernel, 0.0, adaptive_bandwidth, use_kernel_diagonals);
+        w = gda_knn_weights((AbstractGeoDa*)this, k, 1.0, false, is_arc, is_mile, kernel, 0.0, adaptive_bandwidth, use_kernel_diagonals);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }

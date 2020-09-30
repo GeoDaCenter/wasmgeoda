@@ -10,18 +10,19 @@
 #include <rapidjson/stringbuffer.h>
 #include <boost/algorithm/string.hpp>
 
-#include "sa/UniLocalMoran.h"
-#include "sa/UniG.h"
-#include "sa/UniGstar.h"
-#include "sa/UniGeary.h"
-#include "sa/UniJoinCount.h"
-#include "clustering/DorlingCartogram.h"
-#include "weights/GalWeight.h"
-#include "GenUtils.h"
+#include "../libgeoda_src/sa/UniLocalMoran.h"
+#include "../libgeoda_src/sa/UniG.h"
+#include "../libgeoda_src/sa/UniGstar.h"
+#include "../libgeoda_src/sa/UniGeary.h"
+#include "../libgeoda_src/sa/UniJoinCount.h"
+#include "../libgeoda_src/clustering/DorlingCartogram.h"
+#include "../libgeoda_src/weights/GalWeight.h"
+#include "../libgeoda_src/GenUtils.h"
+#include "../libgeoda_src/gda_weights.h"
+#include "../libgeoda_src/gda_sa.h"
+#include "../libgeoda_src/gda_clustering.h"
+
 #include "geojson.h"
-#include "gda_weights.h"
-#include "gda_sa.h"
-#include "gda_clustering.h"
 
 extern "C" {
 	void print_json(char* content);
@@ -149,14 +150,14 @@ CCentroids get_centroids(std::string map_uid)
 
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
-        const std::vector<gda::Point>& pts = json_map->GetCentroids();
+        const std::vector<gda::PointContents*>& pts = json_map->GetCentroids();
         size_t num_obs = json_map->GetNumObs();
         ct.x.resize(num_obs);
         ct.y.resize(num_obs);
 
         for (size_t i=0; i<num_obs; ++i) {
-            ct.x[i] = pts[i].x;
-            ct.y[i] = pts[i].y;
+            ct.x[i] = pts[i]->x;
+            ct.y[i] = pts[i]->y;
         }
     }
     return ct;
@@ -304,7 +305,7 @@ LisaResult local_moran(const std::string map_uid, const std::string weight_uid, 
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
             std::vector<double> values = json_map->GetNumericCol(col_name);
-            UniLocalMoran* lisa = gda_localmoran(w, values);
+            LISA* lisa = gda_localmoran(w, values);
             set_lisa_content(lisa, rst);
             delete lisa;
         }
@@ -320,7 +321,7 @@ LisaResult local_moran1(const std::string map_uid, const std::string weight_uid,
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
-            UniLocalMoran* lisa = gda_localmoran(w, vals);
+            LISA* lisa = gda_localmoran(w, vals);
             set_lisa_content(lisa, rst);
             delete lisa;
         }
@@ -337,7 +338,7 @@ LisaResult local_g(const std::string map_uid, const std::string weight_uid, std:
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
             std::vector<double> values = json_map->GetNumericCol(col_name);
-            UniG* lisa = gda_localg(w, values);
+            LISA* lisa = gda_localg(w, values);
             set_lisa_content(lisa, rst);
             delete lisa;
         }
@@ -354,7 +355,7 @@ LisaResult local_gstar(const std::string map_uid, const std::string weight_uid, 
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
             std::vector<double> values = json_map->GetNumericCol(col_name);
-            UniGstar* lisa = gda_localgstar(w, values);
+            LISA* lisa = gda_localgstar(w, values);
             set_lisa_content(lisa, rst);
             delete lisa;
         }
@@ -370,7 +371,7 @@ LisaResult local_gstar1(const std::string map_uid, const std::string weight_uid,
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
-            UniGstar* lisa = gda_localgstar(w, vals);
+            LISA* lisa = gda_localgstar(w, vals);
             set_lisa_content(lisa, rst);
             delete lisa;
         }
@@ -387,7 +388,7 @@ LisaResult local_geary(const std::string map_uid, const std::string weight_uid, 
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
             std::vector<double> values = json_map->GetNumericCol(col_name);
-            UniGeary* lisa = gda_geary(w, values);
+            LISA* lisa = gda_geary(w, values);
             set_lisa_content(lisa, rst);
             delete lisa;
         }
@@ -404,7 +405,7 @@ LisaResult local_joincount(const std::string map_uid, const std::string weight_u
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
             std::vector<double> values = json_map->GetNumericCol(col_name);
-            UniJoinCount* lisa = gda_joincount(w, values);
+            LISA* lisa = gda_joincount(w, values);
             set_lisa_content(lisa, rst);
             delete lisa;
         }
@@ -495,11 +496,11 @@ std::vector<double> custom_breaks(const std::string map_uid, int k, std::string 
         } else if (boost::iequals(break_name, "quantile_breaks")) {
             return GenUtils::QuantileBreaks(k, data, undef);
         } else if (boost::iequals(break_name, "stddev_breaks")) {
-            return GenUtils::StddevBreaks(k, data, undef);
+            return GenUtils::StddevBreaks(data, undef);
         } else if (boost::iequals(break_name, "hinge15_breaks")) {
-            return GenUtils::Hinge15Breaks(k, data, undef);
+            return GenUtils::Hinge15Breaks(data, undef);
         } else if (boost::iequals(break_name, "hinge30_breaks")) {
-            return GenUtils::Hinge30Breaks(k, data, undef);
+            return GenUtils::Hinge30Breaks(data, undef);
         }
     }
     return std::vector<double>();
@@ -516,11 +517,11 @@ std::vector<double> custom_breaks1(const std::string map_uid, int k,
         } else if (boost::iequals(break_name, "quantile_breaks")) {
             return GenUtils::QuantileBreaks(k, data, undef);
         } else if (boost::iequals(break_name, "stddev_breaks")) {
-            return GenUtils::StddevBreaks(k, data, undef);
+            return GenUtils::StddevBreaks(data, undef);
         } else if (boost::iequals(break_name, "hinge15_breaks")) {
-            return GenUtils::Hinge15Breaks(k, data, undef);
+            return GenUtils::Hinge15Breaks(data, undef);
         } else if (boost::iequals(break_name, "hinge30_breaks")) {
-            return GenUtils::Hinge30Breaks(k, data, undef);
+            return GenUtils::Hinge30Breaks(data, undef);
         }
     }
     return std::vector<double>();
@@ -544,13 +545,13 @@ CartogramResult cartogram(const std::string map_uid, std::vector<double> values)
     if (json_map) {
         GalWeight* w = (GalWeight*)json_map->CreateRookWeights(1, false, 0);
         int num_obs = w->num_obs;
-        const std::vector<gda::Point>& cents = json_map->GetCentroids();
+        const std::vector<gda::PointContents*>& cents = json_map->GetCentroids();
         CartNbrInfo* cart_nbr_info = new CartNbrInfo(w->gal, num_obs);
         std::vector<double> x(num_obs), y(num_obs);
         double orig_data_min=values[0], orig_data_max = values[0];
         for (size_t i=0; i<num_obs; ++i) {
-            x[i] = cents[i].x;
-            y[i] = cents[i].y;
+            x[i] = cents[i]->x;
+            y[i] = cents[i]->y;
             if (orig_data_min > values[i]) orig_data_min = values[i];
             if (orig_data_max < values[i]) orig_data_max = values[i];
         }

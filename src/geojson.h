@@ -6,10 +6,11 @@
 #include <string>
 #include <rapidjson/document.h>
 
-#include "weights/GeodaWeight.h"
-#include "geofeature.h"
+#include "../libgeoda_src/weights/GeodaWeight.h"
+#include "../libgeoda_src/geofeature.h"
+#include "../libgeoda_src/gda_interface.h"
 
-class GdaGeojson
+class GdaGeojson : public AbstractGeoDa
 {
 public:
     // default constructor for std::vector and std::map
@@ -23,13 +24,13 @@ public:
 
     void Read(const char* file_name, const char* in_content);
 
-    int GetNumObs();
+    virtual int GetNumObs() const;
 
-    gda::ShapeType GetMapType();
+    virtual const std::vector<gda::PointContents*>& GetCentroids();
 
-    const std::vector<gda::Point>& GetCentroids();
+    virtual int GetMapType();
 
-    gda::MainMap& GetMainMap();
+    virtual gda::MainMap& GetMainMap();
 
     // data for test only
     std::vector<double> GetNumericCol(std::string col_name);
@@ -87,7 +88,7 @@ protected:
 
     std::map<std::string, GeoDaWeight*> weights_dict;
 
-    std::vector<gda::Point> centroids;
+    std::vector<gda::PointContents*> centroids;
 
     // read geojson related functions:
     void init();
