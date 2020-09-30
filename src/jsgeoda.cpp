@@ -362,6 +362,22 @@ LisaResult local_gstar(const std::string map_uid, const std::string weight_uid, 
     return rst;
 }
 
+LisaResult local_gstar1(const std::string map_uid, const std::string weight_uid, std::vector<double> vals)
+{
+    LisaResult rst;
+
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GeoDaWeight *w = json_map->GetWeights(weight_uid);
+        if (w) {
+            UniGstar* lisa = gda_localgstar(w, vals);
+            set_lisa_content(lisa, rst);
+            delete lisa;
+        }
+    }
+    return rst;
+}
+
 LisaResult local_geary(const std::string map_uid, const std::string weight_uid, std::string col_name)
 {
     LisaResult rst;
@@ -620,6 +636,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
     emscripten::function("local_moran1", &local_moran1);
     emscripten::function("local_g", &local_g);
     emscripten::function("local_gstar", &local_gstar);
+    emscripten::function("local_gstar1", &local_gstar1);
     emscripten::function("local_geary", &local_geary);
     emscripten::function("local_joincount", &local_joincount);
 
@@ -638,13 +655,14 @@ EMSCRIPTEN_BINDINGS(my_module) {
 
 int main() {
     std::cout << "print_json" << std::endl;
-    std::string file_path = "../data/sfcrime.geojson";
+    std::string file_path = "../data/natregimes.geojson";
     GdaGeojson gda(file_path.c_str());
-    geojson_maps["Guerry.geojson"] = &gda;
-    WeightsResult r = queen_weights("Guerry.geojson",1,0,0);
-    CCentroids c = get_centroids("Guerry.geojson");
+    geojson_maps["natregimes.geojson"] = &gda;
+    WeightsResult r = queen_weights("natregimes.geojson",1,0,0);
+    CCentroids c = get_centroids("natregimes.geojson");
     //std::vector<std::string> col_names = {"Crm_prs", "Crm_prp", "Litercy", "Donatns", "Infants", "Suicids"};
-    //std::vector<std::vector<int> > clt = skater("Guerry.geojson", r.uid, 4, col_names, "", -1);
+    std::vector<std::string> col_names = {"hr60", "po60"};
+    std::vector<std::vector<int> > clt = redcap("natregimes.geojson", r.uid, 4, col_names, "", -1,"firstorder-singlelinkage");
     return 0;
 }
 
