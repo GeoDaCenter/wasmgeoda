@@ -509,20 +509,17 @@ std::vector<double> custom_breaks(const std::string map_uid, int k, std::string 
 std::vector<double> custom_breaks1(const std::string map_uid, int k,
                                   std::string break_name, std::vector<double> data)
 {
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        std::vector<bool> undef;
-        if (boost::iequals(break_name, "natural_breaks")) {
-            return GenUtils::NaturalBreaks(k, data, undef);
-        } else if (boost::iequals(break_name, "quantile_breaks")) {
-            return GenUtils::QuantileBreaks(k, data, undef);
-        } else if (boost::iequals(break_name, "stddev_breaks")) {
-            return GenUtils::StddevBreaks(data, undef);
-        } else if (boost::iequals(break_name, "hinge15_breaks")) {
-            return GenUtils::Hinge15Breaks(data, undef);
-        } else if (boost::iequals(break_name, "hinge30_breaks")) {
-            return GenUtils::Hinge30Breaks(data, undef);
-        }
+    std::vector<bool> undef;
+    if (boost::iequals(break_name, "natural_breaks")) {
+        return GenUtils::NaturalBreaks(k, data, undef);
+    } else if (boost::iequals(break_name, "quantile_breaks")) {
+        return GenUtils::QuantileBreaks(k, data, undef);
+    } else if (boost::iequals(break_name, "stddev_breaks")) {
+        return GenUtils::StddevBreaks(data, undef);
+    } else if (boost::iequals(break_name, "hinge15_breaks")) {
+        return GenUtils::Hinge15Breaks(data, undef);
+    } else if (boost::iequals(break_name, "hinge30_breaks")) {
+        return GenUtils::Hinge30Breaks(data, undef);
     }
     return std::vector<double>();
 }
@@ -573,17 +570,17 @@ CartogramResult cartogram(const std::string map_uid, std::vector<double> values)
 //  emcc --bind -O3 readFile.cpp -s WASM=1 -s TOTAL_MEMORY=268435456 -o api.js --std=c++11
 //Note that you need to make sure that there's enough memory available to begin with.
 //I got only 16mb without passing the TOTAL_MEMORY setting.
-EMSCRIPTEN_BINDINGS(my_module) {
+EMSCRIPTEN_BINDINGS(wasmgeoda) {
 
     emscripten::register_vector<std::string>("VectorString");
     emscripten::register_vector<int>("VectorInt");
     emscripten::register_vector<std::vector<int>>("VecVecInt");
-    //emscripten::register_vector<std::string>("VectorString");
-    emscripten::register_vector<float>("VectorFloat");
+    emscripten::register_vector<std::string>("VectorString");
+    //emscripten::register_vector<float>("VectorFloat");
     //emscripten::register_vector<float>("vector<float>");
     emscripten::register_vector<double>("VectorDouble");
 
-    emscripten::register_map<std::string, std::vector<float> >("map<string, vector<float>>");
+    //emscripten::register_map<std::string, std::vector<float> >("map<string, vector<float>>");
 
     emscripten::class_<CCentroids>("CCentroids")
         .function("get_x", &CCentroids::get_x)
