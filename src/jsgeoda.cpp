@@ -108,7 +108,6 @@ struct WeightsResult {
     int weight_type;
     int num_obs;
     bool is_symmetric;
-    double density;
     double sparsity;
     int max_nbrs;
     int min_nbrs;
@@ -119,7 +118,6 @@ struct WeightsResult {
     int get_weight_type() {return weight_type;}
     int get_num_obs() {return num_obs;}
     bool get_is_symmetric() { return is_symmetric;}
-    double get_density() { return density;}
     double get_sparsity() { return sparsity;}
     int get_max_nbrs() {return max_nbrs;}
     int get_min_nbrs() {return min_nbrs;}
@@ -132,7 +130,6 @@ void set_weights_content(GeoDaWeight* w, WeightsResult& rst)
 {
     if (w) {
         rst.weight_type = w->weight_type;
-        rst.density = w->density;
         rst.is_symmetric = w->is_symmetric;
         rst.max_nbrs = w->max_nbrs;
         rst.mean_nbrs =  w->mean_nbrs;
@@ -265,6 +262,7 @@ std::vector<double> get_numeric_col(std::string map_uid, std::string col_name) {
 
 // represent lisa results
 struct LisaResult {
+    bool is_valid;
     std::vector<double> sig_local_vec;
     std::vector<int> sig_cat_vec;
     std::vector<int> cluster_vec;
@@ -274,6 +272,7 @@ struct LisaResult {
     std::vector<std::string> labels;
     std::vector<std::string> colors;
 
+    bool valid() { return is_valid; }
     std::vector<double> get_sig_local() { return sig_local_vec;}
     std::vector<int> get_sig_cat() { return sig_cat_vec;}
     std::vector<int>  get_cluster() { return cluster_vec;}
@@ -286,6 +285,7 @@ struct LisaResult {
 
 void set_lisa_content(LISA* lisa, LisaResult& rst)
 {
+    rst.is_valid = true;
     rst.sig_local_vec = lisa->GetLocalSignificanceValues();
     rst.sig_cat_vec = lisa->GetSigCatIndicators();
     rst.cluster_vec = lisa->GetClusterIndicators();
@@ -296,16 +296,60 @@ void set_lisa_content(LISA* lisa, LisaResult& rst)
     rst.colors = lisa->GetColors();
 }
 
-LisaResult local_moran(const std::string map_uid, const std::string weight_uid, std::string col_name)
+LisaResult local_moran(const std::string map_uid, const std::string weight_uid, std::string col_name, double significance_cutoff,
+                       int nCPUs, int permutations, const std::string& permutation_method, int last_seed_used)
 {
     LisaResult rst;
+    rst.is_valid = false;
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GeoDaWeight *w = json_map->GetWeights(weight_uid);
+        if (w) {
+            std::vector<double> values = json_map->GetNumericCol(col_name);
+            std::vector<bool> undefs;
+            LISA* lisa = gda_localmoran(w, values, undefs, significance_cutoff, nCPUs, permutations,
+                    permutation_method, last_seed_used);
+            set_lisa_content(lisa, rst);
+            delete lisa;
+        }
+    }
+    return rst;
+}
+
+LisaResult local_moran1(const std::string map_uid, const std::string weight_uid, std::vector<double> vals,
+        std::vector<bool> undefs, double significance_cutoff, int nCPUs, int permutations, const std::string&
+        permutation_method, int last_seed_used)
+{
+    LisaResult rst;
+    rst.is_valid = false;
+
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GeoDaWeight *w = json_map->GetWeights(weight_uid);
+        if (w) {
+            LISA* lisa = gda_localmoran(w, vals, undefs, significance_cutoff, nCPUs, permutations,
+                    permutation_method, last_seed_used);
+            set_lisa_content(lisa, rst);
+            delete lisa;
+        }
+    }
+    return rst;
+}
+
+LisaResult local_g(const std::string map_uid, const std::string weight_uid, std::string col_name, double significance_cutoff,
+                   int nCPUs, int permutations, const std::string& permutation_method, int last_seed_used)
+{
+    LisaResult rst;
+    rst.is_valid = false;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
             std::vector<double> values = json_map->GetNumericCol(col_name);
-            LISA* lisa = gda_localmoran(w, values);
+            std::vector<bool> undefs;
+            LISA* lisa = gda_localg(w, values, undefs, significance_cutoff, nCPUs, permutations,
+                                    permutation_method, last_seed_used);
             set_lisa_content(lisa, rst);
             delete lisa;
         }
@@ -313,32 +357,20 @@ LisaResult local_moran(const std::string map_uid, const std::string weight_uid, 
     return rst;
 }
 
-LisaResult local_moran1(const std::string map_uid, const std::string weight_uid, std::vector<double> vals)
+LisaResult local_gstar(const std::string map_uid, const std::string weight_uid, std::string col_name, double significance_cutoff,
+                       int nCPUs, int permutations, const std::string& permutation_method, int last_seed_used)
 {
     LisaResult rst;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->GetWeights(weight_uid);
-        if (w) {
-            LISA* lisa = gda_localmoran(w, vals);
-            set_lisa_content(lisa, rst);
-            delete lisa;
-        }
-    }
-    return rst;
-}
-
-LisaResult local_g(const std::string map_uid, const std::string weight_uid, std::string col_name)
-{
-    LisaResult rst;
+    rst.is_valid = false;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
             std::vector<double> values = json_map->GetNumericCol(col_name);
-            LISA* lisa = gda_localg(w, values);
+            std::vector<bool> undefs;
+            LISA* lisa = gda_localgstar(w, values, undefs, significance_cutoff, nCPUs, permutations,
+                                        permutation_method, last_seed_used);
             set_lisa_content(lisa, rst);
             delete lisa;
         }
@@ -346,16 +378,40 @@ LisaResult local_g(const std::string map_uid, const std::string weight_uid, std:
     return rst;
 }
 
-LisaResult local_gstar(const std::string map_uid, const std::string weight_uid, std::string col_name)
+LisaResult local_gstar1(const std::string map_uid, const std::string weight_uid, std::vector<double> vals,
+        std::vector<bool> undefs, double significance_cutoff, int nCPUs, int permutations, const std::string&
+        permutation_method, int last_seed_used)
 {
     LisaResult rst;
+    rst.is_valid = false;
+
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GeoDaWeight *w = json_map->GetWeights(weight_uid);
+        if (w) {
+            LISA* lisa = gda_localgstar(w, vals, undefs, significance_cutoff, nCPUs, permutations,
+                                        permutation_method, last_seed_used);
+            set_lisa_content(lisa, rst);
+            delete lisa;
+        }
+    }
+    return rst;
+}
+
+LisaResult local_geary(const std::string map_uid, const std::string weight_uid, std::string col_name, double significance_cutoff,
+                       int nCPUs, int permutations, const std::string& permutation_method, int last_seed_used)
+{
+    LisaResult rst;
+    rst.is_valid = false;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
             std::vector<double> values = json_map->GetNumericCol(col_name);
-            LISA* lisa = gda_localgstar(w, values);
+            std::vector<bool> undefs;
+            LISA* lisa = gda_localgeary(w, values, undefs, significance_cutoff, nCPUs, permutations,
+                    permutation_method, last_seed_used);
             set_lisa_content(lisa, rst);
             delete lisa;
         }
@@ -363,49 +419,20 @@ LisaResult local_gstar(const std::string map_uid, const std::string weight_uid, 
     return rst;
 }
 
-LisaResult local_gstar1(const std::string map_uid, const std::string weight_uid, std::vector<double> vals)
+LisaResult local_joincount(const std::string map_uid, const std::string weight_uid, std::string col_name, double significance_cutoff,
+                           int nCPUs, int permutations, const std::string& permutation_method, int last_seed_used)
 {
     LisaResult rst;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->GetWeights(weight_uid);
-        if (w) {
-            LISA* lisa = gda_localgstar(w, vals);
-            set_lisa_content(lisa, rst);
-            delete lisa;
-        }
-    }
-    return rst;
-}
-
-LisaResult local_geary(const std::string map_uid, const std::string weight_uid, std::string col_name)
-{
-    LisaResult rst;
+    rst.is_valid = false;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
             std::vector<double> values = json_map->GetNumericCol(col_name);
-            LISA* lisa = gda_geary(w, values);
-            set_lisa_content(lisa, rst);
-            delete lisa;
-        }
-    }
-    return rst;
-}
-
-LisaResult local_joincount(const std::string map_uid, const std::string weight_uid, std::string col_name)
-{
-    LisaResult rst;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->GetWeights(weight_uid);
-        if (w) {
-            std::vector<double> values = json_map->GetNumericCol(col_name);
-            LISA* lisa = gda_joincount(w, values);
+            std::vector<bool> undefs;
+            LISA* lisa = gda_localjoincount(w, values, undefs, significance_cutoff, nCPUs, permutations,
+                                       permutation_method, last_seed_used);
             set_lisa_content(lisa, rst);
             delete lisa;
         }
@@ -429,59 +456,29 @@ std::vector<int> get_neighbors(const std::string map_uid, const std::string weig
     return nbrs;
 }
 
-std::vector<std::vector<int> > redcap(const std::string map_uid, const std::string weight_uid,
-        int k, std::vector<std::string> sel_names, std::string bound_var, double min_bound,
-        std::string method)
+std::vector<int> redcap(const std::string map_uid, const std::string weight_uid,
+        int k, std::vector<std::vector<double> > data, std::vector<double> bound_vals, double min_bound,
+        std::string method, std::string scale_method, std::string distance_method, int seed, int cpu_threads)
 {
-    std::cout << "redcap(), k=" << k << ":" << bound_var << ":" << min_bound << std::endl;
-
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
-            std::vector<std::vector<double> > data;
-            for (size_t i=0; i<sel_names.size(); ++i) {
-                data.push_back(json_map->GetNumericCol(sel_names[i]));
+            if (scale_method.empty()) {
+                scale_method = "standardize";
             }
-            if ( min_bound == -1) {
-                return gda_redcap(k, w, data, method);
-            } else {
-                std::vector<double> bound_vals = json_map->GetNumericCol(bound_var);
-                return gda_redcap(k, w, data, method, "euclidean", bound_vals, min_bound);
+            if (distance_method.empty()) {
+                distance_method = "euclidean";
             }
+            if ( bound_vals.empty()) {
+                min_bound = -1;
+            }
+            std::vector<std::vector<int> > clusters = gda_redcap(k, w, data, scale_method, method, distance_method,
+                    bound_vals, min_bound, seed, cpu_threads);
+            return GenUtils::flat_2dclusters(w->num_obs, clusters);
         }
     }
-    return std::vector<std::vector<int> >();
-}
-
-std::vector<std::vector<int> > maxp(const std::string map_uid, const std::string weight_uid,
-        std::vector<std::string> sel_names, std::string bound_var, double min_bound,
-        int tabu_length, double cool_rate,
-        std::string method, int k, int n_iter)
-{
-    std::cout << "maxp(), bound_var:" << bound_var << ":" << min_bound << std::endl;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->GetWeights(weight_uid);
-        if (w) {
-            std::vector<std::vector<double> > data;
-            for (size_t i=0; i<sel_names.size(); ++i) {
-                data.push_back(json_map->GetNumericCol(sel_names[i]));
-            }
-            std::vector<double> bound_vals;
-            if ( min_bound == -1) {
-                for (size_t j=0; j<w->num_obs; ++j) {
-                    bound_vals.push_back(1);
-                }
-                min_bound = k;
-            } else {
-                bound_vals = json_map->GetNumericCol(bound_var);
-            }
-            return gda_maxp(w, data, bound_vals, min_bound, method, n_iter, tabu_length, cool_rate);
-        }
-    }
-    return std::vector<std::vector<int> >();
+    return std::vector<int>();
 }
 
 std::vector<double> custom_breaks(const std::string map_uid, int k, std::string col_name,
@@ -611,7 +608,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .function("get_weight_type", &WeightsResult::get_weight_type)
         .function("get_num_obs", &WeightsResult::get_num_obs)
         .function("get_is_symmetric", &WeightsResult::get_is_symmetric)
-        .function("get_density", &WeightsResult::get_density)
+        .function("valid", &WeightsResult::valid)
         .function("get_sparsity", &WeightsResult::get_sparsity)
         .function("get_max_nbrs", &WeightsResult::get_max_nbrs)
         .function("get_min_nbrs", &WeightsResult::get_min_nbrs)
@@ -642,7 +639,6 @@ EMSCRIPTEN_BINDINGS(my_module) {
     emscripten::function("local_joincount", &local_joincount);
 
     emscripten::function("redcap", &redcap);
-    emscripten::function("maxp", &maxp);
 
     emscripten::function("custom_breaks", &custom_breaks);
     emscripten::function("custom_breaks1", &custom_breaks1);

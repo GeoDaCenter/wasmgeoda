@@ -87,6 +87,23 @@ int GdaGeojson::GetMapType()
     return this->main_map.shape_type;
 }
 
+std::string GdaGeojson::GetMapTypeName()
+{
+    if (main_map.shape_type == gda::POLYGON || main_map.shape_type == gda::POLYGON_Z ||
+        main_map.shape_type == gda::POLYGON_M) {
+        return "Polygon";
+    } else if (main_map.shape_type == gda::POINT_TYP || main_map.shape_type == gda::MULTI_POINT ||
+               main_map.shape_type == gda::POINT_Z || main_map.shape_type == gda::POINT_M ||
+               main_map.shape_type == gda::MULTI_POINT_Z) {
+        return "Point";
+    } else if (main_map.shape_type == gda::POLY_LINE || main_map.shape_type == gda::POLY_LINE_Z ||
+               main_map.shape_type == gda::POLY_LINE_M ) {
+        return "Line";
+    } else {
+        return "Unknown";
+    }
+}
+
 const std::vector<gda::PointContents*>& GdaGeojson::GetCentroids()
 {
     if (this->centroids.empty()) {
@@ -267,7 +284,7 @@ GeoDaWeight* GdaGeojson::CreateKernelWeights(unsigned int k,
 std::vector<double> GdaGeojson::GetNumericCol(std::string col_name)
 {
     if (data_numeric.find(col_name) == data_numeric.end()) {
-        std::cout << "not found col" <<std::endl;
+        std::cout << col_name << " not found" <<std::endl;
         return std::vector<double>();
     }
     return data_numeric[col_name];

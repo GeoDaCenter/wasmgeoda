@@ -30,6 +30,8 @@ public:
 
     virtual int GetMapType();
 
+    virtual std::string GetMapTypeName();
+
     virtual gda::MainMap& GetMainMap();
 
     // data for test only
