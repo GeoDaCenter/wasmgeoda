@@ -34,8 +34,11 @@ public:
 
     virtual gda::MainMap& GetMainMap();
 
-    // data for test only
     std::vector<double> GetNumericCol(std::string col_name);
+
+    std::vector<std::string> GetStringCol(std::string col_name);
+
+    bool IsNumericCol(std::string col_name);
 
     // weights related functions:
     GeoDaWeight* CreateQueenWeights(unsigned int order=1, 
@@ -58,7 +61,7 @@ public:
         bool is_arc = false,
         bool is_mile = true);
 
-    GeoDaWeight* CreateKernelWeights(unsigned int k,
+    GeoDaWeight* CreateKernelKnnWeights(unsigned int k,
         const std::string& kernel,
         bool adaptive_bandwidth = false,
         bool use_kernel_diagonals = false,

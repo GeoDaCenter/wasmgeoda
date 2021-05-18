@@ -1,6 +1,7 @@
 #ifdef __JSGEODA__
 #include <emscripten/bind.h>
 #endif
+
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -21,18 +22,19 @@
 #include "../libgeoda_src/gda_weights.h"
 #include "../libgeoda_src/gda_sa.h"
 #include "../libgeoda_src/gda_clustering.h"
+#include "../libgeoda_src/libgeoda.h"
 
 #include "geojson.h"
+#include "jsgeoda.h"
 
-extern "C" {
-	void print_json(char* content);
-    //void new_geojsonmap(const char* file_name, const char* addr, const size_t & len);
-    void new_geojsonmap1(const char* file_name, uint8_t* data, size_t len);
-}
+std::map<std::string, GdaGeojson*> geojson_maps;
 
-auto geojson_maps = std::map<std::string, GdaGeojson*>(); 
+//extern "C" {
+	//void print_json(char* content);
+    //void new_geojsonmap(const char* file_name, uint8_t* data, size_t len);
+//}
 
-void free_geojsonmap() 
+void free_geojsonmap()
 {
 	std::map<std::string, GdaGeojson*>::iterator it;
 	for (it = geojson_maps.begin(); it != geojson_maps.end(); ++it) {
@@ -53,30 +55,39 @@ void free_geojsonmap()
  * 			all jsgeoda APIs. e.g. queen_weights(map_uid)
  * 
  */
-void new_geojsonmap(std::string file_name, const int & addr, const size_t & len) {
-	//We get out pointer as a plain int from javascript
-	//We use a reinterpret_cast to turn our plain int into a uint8_t pointer. After
-	//which we can play with the data just like we would normally.
-	char* data = reinterpret_cast<char*>(addr);
-    //std::cout << "new_geojsonmap():" << file_name << len << "," << data[0] << std::endl;
-
-	GdaGeojson *json_map = new GdaGeojson(file_name.c_str(), data);
-
-	// store globally, has to be release by calling free_geojsonmap()
-	geojson_maps[file_name] = json_map;
-}
-
-void new_geojsonmap1(const char* file_name, uint8_t* in, size_t len) {
-    char* data = new char[len+1];
+//void new_geojsonmap(const char* file_name, uint8_t* in, size_t len) {
+void new_geojsonmap(std::string file_name, const int & in, const size_t & len) {
+    //We get out pointer as a plain int from javascript
+    //We use a reinterpret_cast to turn our plain int into a uint8_t pointer. After
+    //which we can play with the data just like we would normally.
+    char* data = reinterpret_cast<char*>(in);
+    //char* data = (char*)malloc(sizeof(char) * (len+1));
+    //memcpy(data, in, len);
+    /*
     for (size_t i=0; i<len;++i) {
         data[i] = in[i];
         if (i == len-1)
         std::cout << data[i];
     }
+     */
+    std::cout << data[len-2] << "- " << data[len-1] << "-" << data[len] << std::endl;
     data[len] = '\0';
-    GdaGeojson *json_map = new GdaGeojson(file_name, data);
+
+    // store globally, has to be release by calling free_geojsonmap()
+    GdaGeojson *json_map = new GdaGeojson(file_name.c_str(), data);
     geojson_maps[std::string(file_name)] = json_map;
+    free(data);
 }
+
+/*
+// deprecated for now
+void new_shapefilemap(std::string file_name) {
+    std::cout << "new_shapefilemap" << file_name << std::endl;
+    GeoDa* g = CreateGeoDaFromSHP (file_name.c_str());
+    std::cout << "new_shapefilemap:" << g->GetNumObs() << std::endl;
+    delete g;
+}
+ */
 
 int get_num_obs(std::string map_uid) {
 	std::cout << "get_num_obs()" << map_uid << std::endl;
@@ -97,49 +108,6 @@ int get_map_type(std::string map_uid) {
 	return 0;
 }
 
-struct CCentroids {
-    std::vector<double> x;
-    std::vector<double> y;
-    std::vector<double> get_x() { return x;}
-    std::vector<double> get_y() { return y;}
-};
-
-struct WeightsResult {
-    int weight_type;
-    int num_obs;
-    bool is_symmetric;
-    double sparsity;
-    int max_nbrs;
-    int min_nbrs;
-    double median_nbrs;
-    double mean_nbrs;
-    std::string uid;
-
-    int get_weight_type() {return weight_type;}
-    int get_num_obs() {return num_obs;}
-    bool get_is_symmetric() { return is_symmetric;}
-    double get_sparsity() { return sparsity;}
-    int get_max_nbrs() {return max_nbrs;}
-    int get_min_nbrs() {return min_nbrs;}
-    double get_median_nbrs() { return median_nbrs;}
-    double get_mean_nbrs() { return mean_nbrs;}
-    std::string get_uid() { return uid;}
-};
-
-void set_weights_content(GeoDaWeight* w, WeightsResult& rst)
-{
-    if (w) {
-        rst.weight_type = w->weight_type;
-        rst.is_symmetric = w->is_symmetric;
-        rst.max_nbrs = w->max_nbrs;
-        rst.mean_nbrs =  w->mean_nbrs;
-        rst.median_nbrs =  w->median_nbrs;
-        rst.min_nbrs =  w->min_nbrs;
-        rst.num_obs = w->num_obs;
-        rst.sparsity = w->sparsity;
-        rst.uid = w->uid;
-    }
-}
 
 CCentroids get_centroids(std::string map_uid)
 {
@@ -160,97 +128,6 @@ CCentroids get_centroids(std::string map_uid)
     return ct;
 }
 
-WeightsResult queen_weights(std::string map_uid, int order, int include_lower_order, double precision_threshold)
-{
-	std::cout << "queen_weights()" << map_uid << std::endl;
-    WeightsResult rst;
-
-	GdaGeojson *json_map = geojson_maps[map_uid];
-	if (json_map) {
-		GeoDaWeight *w = json_map->CreateQueenWeights(order, include_lower_order, precision_threshold);
-	    set_weights_content(w, rst);
-	}
-	return rst;
-}
-
-WeightsResult rook_weights(std::string map_uid, int order, int include_lower_order, double precision_threshold)
-{
-    std::cout << "rook_weights()" << map_uid << std::endl;
-    WeightsResult rst;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->CreateRookWeights(order, include_lower_order, precision_threshold);
-        set_weights_content(w, rst);
-    }
-    return rst;
-}
-
-WeightsResult knn_weights(std::string map_uid, int k, double power, bool is_inverse, bool is_arc, bool is_mile)
-{
-    std::cout << "knn_weights()" << map_uid << std::endl;
-    WeightsResult rst;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->CreateKnnWeights(k, power, is_inverse, is_arc, is_mile);
-        set_weights_content(w, rst);
-    }
-    return rst;
-}
-
-WeightsResult dist_weights(std::string map_uid, double dist_thres, double power, bool is_inverse, bool is_arc, bool is_mile)
-{
-    std::cout << "distance_weights()" << map_uid << std::endl;
-    WeightsResult rst;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->CreateDistanceWeights(dist_thres, power, is_inverse, is_arc, is_mile);
-        set_weights_content(w, rst);
-    }
-    return rst;
-}
-
-WeightsResult kernel_weights(std::string map_uid, int k, std::string kernel, bool adaptive_bandwidth,
-        bool use_kernel_diagonals, bool is_arc, bool is_mile)
-{
-    std::cout << "kernel_weights()" << map_uid << std::endl;
-    WeightsResult rst;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        std::string kernel_str(kernel);
-        GeoDaWeight *w = json_map->CreateKernelWeights(k, kernel_str, adaptive_bandwidth, use_kernel_diagonals, is_arc, is_mile);
-        set_weights_content(w, rst);
-    }
-    return rst;
-}
-
-WeightsResult kernel_bandwidth_weights(std::string map_uid, double dist_thres, std::string kernel,
-    bool use_kernel_diagonals, bool is_arc, bool is_mile)
-{
-    std::cout << "kernel_bandwidth_weights()" << map_uid << std::endl;
-    WeightsResult rst;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        std::string kernel_str(kernel);
-        GeoDaWeight *w = json_map->CreateKernelWeights(dist_thres, kernel_str, use_kernel_diagonals, is_arc, is_mile);
-        set_weights_content(w, rst);
-    }
-    return rst;
-}
-
-double get_min_dist_threshold(std::string map_uid, bool is_arc, bool is_mile)
-{
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        return json_map->GetMinDistanceThreshold(is_arc, is_mile);
-    }
-    return 0;
-}
-
 std::vector<double> get_numeric_col(std::string map_uid, std::string col_name) {
     std::cout << "get_numeric_col()" << map_uid << std::endl;
     GdaGeojson *json_map = geojson_maps[map_uid];
@@ -258,6 +135,23 @@ std::vector<double> get_numeric_col(std::string map_uid, std::string col_name) {
         return json_map->GetNumericCol(col_name);
     }
     return std::vector<double>();
+}
+
+std::vector<std::string> get_string_col(std::string map_uid, std::string col_name) {
+    std::cout << "get_string_col()" << map_uid << std::endl;
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        return json_map->GetStringCol(col_name);
+    }
+    return std::vector<std::string>();
+}
+
+bool is_numeric_col(std::string map_uid, std::string col_name) {
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        return json_map->IsNumericCol(col_name);
+    }
+    return false;
 }
 
 // represent lisa results
@@ -272,7 +166,7 @@ struct LisaResult {
     std::vector<std::string> labels;
     std::vector<std::string> colors;
 
-    bool valid() { return is_valid; }
+    bool get_is_valid() { return is_valid; }
     std::vector<double> get_sig_local() { return sig_local_vec;}
     std::vector<int> get_sig_cat() { return sig_cat_vec;}
     std::vector<int>  get_cluster() { return cluster_vec;}
@@ -296,20 +190,25 @@ void set_lisa_content(LISA* lisa, LisaResult& rst)
     rst.colors = lisa->GetColors();
 }
 
-LisaResult local_moran(const std::string map_uid, const std::string weight_uid, std::string col_name, double significance_cutoff,
-                       int nCPUs, int permutations, const std::string& permutation_method, int last_seed_used)
+LisaResult local_moran(const std::string map_uid, const std::string weight_uid, std::vector<double> vals)
 {
     LisaResult rst;
     rst.is_valid = false;
+
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
-            std::vector<double> values = json_map->GetNumericCol(col_name);
             std::vector<bool> undefs;
-            LISA* lisa = gda_localmoran(w, values, undefs, significance_cutoff, nCPUs, permutations,
-                    permutation_method, last_seed_used);
+            double significance_cutoff = 0.05;
+            int nCPUs = 6;
+            int permutations = 999;
+            std::string permutation_method = "complete";
+            int last_seed_used = 123456789;
+            LISA* lisa = gda_localmoran(w, vals, undefs, significance_cutoff, nCPUs, permutations,
+                                        permutation_method, last_seed_used);
             set_lisa_content(lisa, rst);
+            std::cout << rst.lisa_vec[0] << std::endl;
             delete lisa;
         }
     }
@@ -572,10 +471,8 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
     emscripten::register_vector<std::string>("VectorString");
     emscripten::register_vector<int>("VectorInt");
     emscripten::register_vector<std::vector<int>>("VecVecInt");
-    emscripten::register_vector<std::string>("VectorString");
-    //emscripten::register_vector<float>("VectorFloat");
-    //emscripten::register_vector<float>("vector<float>");
     emscripten::register_vector<double>("VectorDouble");
+    emscripten::register_vector<std::vector<double>>("VecVecDouble");
 
     //emscripten::register_map<std::string, std::vector<float> >("map<string, vector<float>>");
 
@@ -605,7 +502,7 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
         .function("get_weight_type", &WeightsResult::get_weight_type)
         .function("get_num_obs", &WeightsResult::get_num_obs)
         .function("get_is_symmetric", &WeightsResult::get_is_symmetric)
-        .function("valid", &WeightsResult::valid)
+        .function("get_is_valid", &WeightsResult::get_is_valid)
         .function("get_sparsity", &WeightsResult::get_sparsity)
         .function("get_max_nbrs", &WeightsResult::get_max_nbrs)
         .function("get_min_nbrs", &WeightsResult::get_min_nbrs)
@@ -615,9 +512,12 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
         ;
 
     emscripten::function("new_geojsonmap", &new_geojsonmap);
+
     emscripten::function("get_num_obs", &get_num_obs);
     emscripten::function("get_map_type", &get_map_type);
+    emscripten::function("is_numeric_col", &is_numeric_col);
     emscripten::function("get_numeric_col", &get_numeric_col);
+    emscripten::function("get_string_col", &get_string_col);
 
     emscripten::function("min_distance_threshold", &get_min_dist_threshold);
     emscripten::function("queen_weights", &queen_weights);
@@ -644,8 +544,7 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
     emscripten::function("get_neighbors", &get_neighbors);
 }
 
-
-#endif
+# else
 
 int main() {
     std::cout << "print_json" << std::endl;
@@ -656,7 +555,8 @@ int main() {
     CCentroids c = get_centroids("natregimes.geojson");
     //std::vector<std::string> col_names = {"Crm_prs", "Crm_prp", "Litercy", "Donatns", "Infants", "Suicids"};
     std::vector<std::string> col_names = {"hr60", "po60"};
-    std::vector<std::vector<int> > clt = redcap("natregimes.geojson", r.uid, 4, col_names, "", -1,"firstorder-singlelinkage");
+    //std::vector<std::vector<int> > clt = redcap("natregimes.geojson", r.uid, 4, col_names, "", -1,
+    // "firstorder-singlelinkage");
     return 0;
 }
 
@@ -664,3 +564,5 @@ void print_json(char* content) {
 	std::cout << "print_json" << std::endl;
 	std::cout << content << std::endl;
 }
+
+#endif

@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.12)
 project(${project} VERSION "0.0.6")
 
 # process exported functions
-set(exports _print_json _new_geojsonmap1)
+set(exports _print_json)
 set(exports_string "")
 list(JOIN exports "," exports_string)
 
@@ -12,7 +12,7 @@ list(JOIN exports "," exports_string)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(TARGET_NAME ${project}.html)
+set(TARGET_NAME ${project})
 message("MY_VARIABLE evaluates to ${TARGET_NAME}")
 
 # emcc version 1.39.0  (commit e047fe4c1ecfae6ba471ca43f2f630b79516706b)
@@ -25,15 +25,19 @@ SET(CMAKE_CXX_COMPILER em++)
 #set( CMAKE_CXX_FLAGS "-O2 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=200MB -s USE_PTHREADS=0 -s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
 set(CMAKE_CXX_FLAGS "-O3 -DNDEBUG --bind -s ASSERTIONS=0 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_FILESYSTEM=1 -s USE_BOOST_HEADERS=1")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s FILESYSTEM=1 -s FORCE_FILESYSTEM=1")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D MEMFS")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=6")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s BINARYEN_TRAP_MODE='clamp'")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_FUNCTIONS=\"[${exports_string}]\"")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_FUNCTIONS=\"[${exports_string}]\"")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s MODULARIZE=1")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --pre-js ${CMAKE_SOURCE_DIR}/src/pre.js")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORT_NAME='jsgeoda'")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -o ./${TARGET_NAME}.js")
 
 set(src
 		src/jsgeoda.cpp
+		src/jsgeoda_weights.cpp
 		src/geojson.cpp
 		libgeoda_src/weights/GeodaWeight.cpp
 		libgeoda_src/weights/GalWeight.cpp
@@ -42,6 +46,7 @@ set(src
 		libgeoda_src/weights/VoronoiUtils.cpp
 		libgeoda_src/gda_weights.cpp
 		libgeoda_src/gda_clustering.cpp
+		libgeoda_src/gda_data.cpp
 		libgeoda_src/gda_sa.cpp
 		libgeoda_src/GenGeomAlgs.cpp
 		libgeoda_src/SpatialIndAlgs.cpp
