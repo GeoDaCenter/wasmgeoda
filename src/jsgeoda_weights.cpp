@@ -11,9 +11,10 @@
 
 extern std::map<std::string, GdaGeojson*> geojson_maps;
 
-void set_weights_content(GeoDaWeight* w, WeightsResult& rst)
+void set_weights_content(GeoDaWeight* w, const string& map_uid, WeightsResult& rst)
 {
     if (w) {
+        rst.map_uid = map_uid;
         rst.is_valid = true;
         rst.weight_type = w->weight_type;
         rst.is_symmetric = w->is_symmetric;
@@ -36,7 +37,7 @@ WeightsResult queen_weights(std::string map_uid, int order, int include_lower_or
 	if (json_map) {
 	    std::cout << "enter queen_weights();" << std::endl;
 		GeoDaWeight *w = json_map->CreateQueenWeights(order, include_lower_order, precision_threshold);
-	    set_weights_content(w, rst);
+	    set_weights_content(w, map_uid, rst);
 	}
 	return rst;
 }
@@ -49,7 +50,7 @@ WeightsResult rook_weights(std::string map_uid, int order, int include_lower_ord
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         GeoDaWeight *w = json_map->CreateRookWeights(order, include_lower_order, precision_threshold);
-        set_weights_content(w, rst);
+        set_weights_content(w, map_uid, rst);
     }
     return rst;
 }
@@ -62,7 +63,7 @@ WeightsResult knn_weights(std::string map_uid, int k, double power, bool is_inve
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         GeoDaWeight *w = json_map->CreateKnnWeights(k, power, is_inverse, is_arc, is_mile);
-        set_weights_content(w, rst);
+        set_weights_content(w, map_uid, rst);
     }
     return rst;
 }
@@ -75,7 +76,7 @@ WeightsResult dist_weights(std::string map_uid, double dist_thres, double power,
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         GeoDaWeight *w = json_map->CreateDistanceWeights(dist_thres, power, is_inverse, is_arc, is_mile);
-        set_weights_content(w, rst);
+        set_weights_content(w, map_uid, rst);
     }
     return rst;
 }
@@ -91,7 +92,7 @@ WeightsResult kernel_weights(std::string map_uid, int k, std::string kernel, boo
         std::string kernel_str(kernel);
         GeoDaWeight *w = json_map->CreateKernelKnnWeights(k, kernel_str, adaptive_bandwidth, use_kernel_diagonals,
                 power, is_inverse, is_arc, is_mile);
-        set_weights_content(w, rst);
+        set_weights_content(w, map_uid, rst);
     }
     return rst;
 }
@@ -107,7 +108,7 @@ WeightsResult kernel_bandwidth_weights(std::string map_uid, double dist_thres, s
         std::string kernel_str(kernel);
         GeoDaWeight *w = json_map->CreateKernelWeights(dist_thres, kernel_str, use_kernel_diagonals, power, is_inverse,
                                                        is_arc, is_mile);
-        set_weights_content(w, rst);
+        set_weights_content(w, map_uid, rst);
     }
     return rst;
 }

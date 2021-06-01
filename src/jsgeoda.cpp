@@ -504,6 +504,12 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
     emscripten::function("hinge15_breaks", &hinge15_breaks);
     emscripten::function("hinge30_breaks", &hinge30_breaks);
 
+    emscripten::function("excess_risk", &excess_risk);
+    emscripten::function("eb_risk", &eb_risk);
+    emscripten::function("spatial_lag", &spatial_lag);
+    emscripten::function("spatial_rate", &spatial_rate);
+    emscripten::function("spatial_eb", &spatial_eb);
+
     emscripten::function("cartogram", &cartogram);
     emscripten::function("get_centroids", &get_centroids);
     emscripten::function("get_neighbors", &get_neighbors);
