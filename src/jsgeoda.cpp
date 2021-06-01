@@ -468,6 +468,7 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
         .function("get_median_nbrs", &WeightsResult::get_median_nbrs)
         .function("get_mean_nbrs", &WeightsResult::get_mean_nbrs)
         .function("get_uid", &WeightsResult::get_uid)
+        .function("get_map_uid", &WeightsResult::get_map_uid)
         ;
 
     emscripten::function("new_geojsonmap", &new_geojsonmap);
