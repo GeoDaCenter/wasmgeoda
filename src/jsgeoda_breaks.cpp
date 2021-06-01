@@ -128,13 +128,12 @@ std::vector<double> spatial_lag(const std::string map_uid,
                                 const std::vector<double>& data, bool is_binary,
                                 bool row_stand, bool inc_diag)
 {
-    std::vector<double> result;
-
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
             int obs = (int)data.size();
+            std::vector<double> result(obs);
             std::vector<bool> undefs(obs, false);
 
             for (int i=0; i<obs; ++i) {
@@ -169,9 +168,10 @@ std::vector<double> spatial_lag(const std::string map_uid,
                 }
                 result[i] = lag;
             }
+            return result;
         }
     }
-    return result;
+    return std::vector<double>();
 }
 
 std::vector<double> spatial_rate(const std::vector<double>& event_data,
