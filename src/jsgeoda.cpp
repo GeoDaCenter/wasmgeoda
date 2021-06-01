@@ -60,17 +60,9 @@ void new_geojsonmap(std::string file_name, const int & in, const size_t & len) {
     //We get out pointer as a plain int from javascript
     //We use a reinterpret_cast to turn our plain int into a uint8_t pointer. After
     //which we can play with the data just like we would normally.
-    char* data = reinterpret_cast<char*>(in);
-    //char* data = (char*)malloc(sizeof(char) * (len+1));
-    //memcpy(data, in, len);
-    /*
-    for (size_t i=0; i<len;++i) {
-        data[i] = in[i];
-        if (i == len-1)
-        std::cout << data[i];
-    }
-     */
-    std::cout << data[len-2] << "- " << data[len-1] << "-" << data[len] << std::endl;
+    char* _in = reinterpret_cast<char*>(in);
+    char* data = (char*)malloc(sizeof(char) * (len+1));
+    memcpy(data, _in, len);
     data[len] = '\0';
 
     // store globally, has to be release by calling free_geojsonmap()
@@ -87,7 +79,7 @@ void new_shapefilemap(std::string file_name) {
     std::cout << "new_shapefilemap:" << g->GetNumObs() << std::endl;
     delete g;
 }
- */
+*/
 
 int get_num_obs(std::string map_uid) {
 	std::cout << "get_num_obs()" << map_uid << std::endl;
@@ -98,6 +90,13 @@ int get_num_obs(std::string map_uid) {
 	return 0;
 }
 
+std::vector<double> get_bounds(std::string map_uid) {
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        return json_map->GetBounds();
+    }
+    return std::vector<double>();
+}
 
 int get_map_type(std::string map_uid) {
 	std::cout << "get_map_type()" << map_uid << std::endl;
@@ -380,46 +379,6 @@ std::vector<int> redcap(const std::string map_uid, const std::string weight_uid,
     return std::vector<int>();
 }
 
-std::vector<double> custom_breaks(const std::string map_uid, int k, std::string col_name,
-        std::string break_name)
-{
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        std::vector<bool> undef;
-        std::vector<double> data = json_map->GetNumericCol(col_name);
-        if (boost::iequals(break_name, "natural_breaks")) {
-            return GenUtils::NaturalBreaks(k, data, undef);
-        } else if (boost::iequals(break_name, "quantile_breaks")) {
-            return GenUtils::QuantileBreaks(k, data, undef);
-        } else if (boost::iequals(break_name, "stddev_breaks")) {
-            return GenUtils::StddevBreaks(data, undef);
-        } else if (boost::iequals(break_name, "hinge15_breaks")) {
-            return GenUtils::Hinge15Breaks(data, undef);
-        } else if (boost::iequals(break_name, "hinge30_breaks")) {
-            return GenUtils::Hinge30Breaks(data, undef);
-        }
-    }
-    return std::vector<double>();
-}
-
-std::vector<double> custom_breaks1(const std::string map_uid, int k,
-                                  std::string break_name, std::vector<double> data)
-{
-    std::vector<bool> undef;
-    if (boost::iequals(break_name, "natural_breaks")) {
-        return GenUtils::NaturalBreaks(k, data, undef);
-    } else if (boost::iequals(break_name, "quantile_breaks")) {
-        return GenUtils::QuantileBreaks(k, data, undef);
-    } else if (boost::iequals(break_name, "stddev_breaks")) {
-        return GenUtils::StddevBreaks(data, undef);
-    } else if (boost::iequals(break_name, "hinge15_breaks")) {
-        return GenUtils::Hinge15Breaks(data, undef);
-    } else if (boost::iequals(break_name, "hinge30_breaks")) {
-        return GenUtils::Hinge30Breaks(data, undef);
-    }
-    return std::vector<double>();
-}
-
 struct CartogramResult {
     std::vector<double> x;
     std::vector<double> y;
@@ -513,6 +472,7 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
 
     emscripten::function("new_geojsonmap", &new_geojsonmap);
 
+    emscripten::function("get_bounds", &get_bounds);
     emscripten::function("get_num_obs", &get_num_obs);
     emscripten::function("get_map_type", &get_map_type);
     emscripten::function("is_numeric_col", &is_numeric_col);
@@ -537,10 +497,15 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
 
     emscripten::function("redcap", &redcap);
 
-    emscripten::function("custom_breaks", &custom_breaks);
-    emscripten::function("custom_breaks1", &custom_breaks1);
-    emscripten::function("get_centroids", &get_centroids);
+    emscripten::function("natural_breaks", &natural_breaks);
+    emscripten::function("quantile_breaks", &quantile_breaks);
+    emscripten::function("percentile_breaks", &percentile_breaks);
+    emscripten::function("stddev_breaks", &stddev_breaks);
+    emscripten::function("hinge15_breaks", &hinge15_breaks);
+    emscripten::function("hinge30_breaks", &hinge30_breaks);
+
     emscripten::function("cartogram", &cartogram);
+    emscripten::function("get_centroids", &get_centroids);
     emscripten::function("get_neighbors", &get_neighbors);
 }
 

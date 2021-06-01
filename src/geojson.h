@@ -41,38 +41,40 @@ public:
     bool IsNumericCol(std::string col_name);
 
     // weights related functions:
-    GeoDaWeight* CreateQueenWeights(unsigned int order=1, 
-        bool include_lower_order = false,
- 	    double precision_threshold = 0);
+    GeoDaWeight* CreateQueenWeights(unsigned int order,
+        bool include_lower_order,
+ 	    double precision_threshold);
 
-    GeoDaWeight* CreateRookWeights(unsigned int order=1, 
-        bool include_lower_order = false,
- 	    double precision_threshold = 0);
+    GeoDaWeight* CreateRookWeights(unsigned int order,
+        bool include_lower_order,
+ 	    double precision_threshold);
 
     GeoDaWeight* CreateKnnWeights(unsigned int k,
-        double power = 1.0,
-        bool is_inverse = false,
-        bool is_arc = false,
-        bool is_mile = true);
+        double power,
+        bool is_inverse,
+        bool is_arc,
+        bool is_mile);
 
     GeoDaWeight* CreateDistanceWeights(double dist_thres,
-        double power = 1.0,
-        bool is_inverse = false,
-        bool is_arc = false,
-        bool is_mile = true);
+        double power,
+        bool is_inverse,
+        bool is_arc,
+        bool is_mile);
 
     GeoDaWeight* CreateKernelKnnWeights(unsigned int k,
         const std::string& kernel,
-        bool adaptive_bandwidth = false,
-        bool use_kernel_diagonals = false,
-        bool is_arc = false,
-        bool is_mile = true);
+        bool adaptive_bandwidth,
+        bool use_kernel_diagonals,
+        double power, bool is_inverse,
+        bool is_arc,
+        bool is_mile);
 
     GeoDaWeight* CreateKernelWeights(double dist_thres,
         const std::string& kernel,
-        bool use_kernel_diagonals = false,
-        bool is_arc = false,
-        bool is_mile = true);
+        bool use_kernel_diagonals,
+        double power, bool is_inverse,
+        bool is_arc,
+        bool is_mile);
 
     GeoDaWeight* GetWeights(const std::string& w_uid) {
         return weights_dict[w_uid];
@@ -81,6 +83,8 @@ public:
     double GetMinDistanceThreshold(bool is_arc, bool is_mile);
 
     std::string GetFilePath() const { return file_path; }
+
+    std::vector<double> GetBounds();
 
 protected:
     std::string file_path;

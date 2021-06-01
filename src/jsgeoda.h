@@ -64,11 +64,30 @@ WeightsResult dist_weights(std::string map_uid, double dist_thres, double power,
         bool is_mile);
 
 WeightsResult kernel_weights(std::string map_uid, int k, std::string kernel, bool adaptive_bandwidth,
-                             bool use_kernel_diagonals, bool is_arc, bool is_mile);
+                             bool use_kernel_diagonals, double power, bool is_inverse, bool is_arc, bool is_mile);
 
 WeightsResult kernel_bandwidth_weights(std::string map_uid, double dist_thres, std::string kernel,
-                                       bool use_kernel_diagonals, bool is_arc, bool is_mile);
+                                       bool use_kernel_diagonals, double power, bool is_inverse, bool is_arc,
+                                       bool is_mile);
 
 double get_min_dist_threshold(std::string map_uid, bool is_arc, bool is_mile);
+
+std::vector<double> natural_breaks(int k, const std::vector<double>& data,
+                                    const std::vector<int>& undefs);
+
+std::vector<double> quantile_breaks(int k, const std::vector<double>& data,
+                                    const std::vector<int>& undefs);
+
+std::vector<double> percentile_breaks(const std::vector<double>& data,
+                                      const std::vector<int>& undefs);
+
+std::vector<double> stddev_breaks(const std::vector<double>& data,
+                                  const std::vector<int>& undefs);
+
+std::vector<double> hinge15_breaks(const std::vector<double>& data,
+                                   const std::vector<int>& undefs);
+
+std::vector<double> hinge30_breaks(const std::vector<double>& data,
+                                   const std::vector<int>& undefs);
 
 #endif //JSGEODA_JSGEODA_H

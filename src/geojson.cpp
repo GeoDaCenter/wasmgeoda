@@ -72,6 +72,16 @@ GdaGeojson::~GdaGeojson()
     }
 }
 
+std::vector<double> GdaGeojson::GetBounds()
+{
+    std::vector<double> bounds;
+    bounds.push_back(this->main_map.bbox_x_min);
+    bounds.push_back(this->main_map.bbox_x_max);
+    bounds.push_back(this->main_map.bbox_y_min);
+    bounds.push_back(this->main_map.bbox_y_max);
+    return bounds;
+}
+
 gda::MainMap& GdaGeojson::GetMainMap()
 {
     return this->main_map;
@@ -248,6 +258,7 @@ GeoDaWeight* GdaGeojson::CreateDistanceWeights(double dist_thres,
 GeoDaWeight* GdaGeojson::CreateKernelWeights(double dist_thres,
                                              const std::string& kernel,
                                              bool use_kernel_diagonals,
+                                             double power, bool is_inverse,
                                              bool is_arc, bool is_mile)
 {
     std::stringstream w_uid;
@@ -261,8 +272,6 @@ GeoDaWeight* GdaGeojson::CreateKernelWeights(double dist_thres,
     std::string w_uid_str = w_uid.str();
 
     std::string polyid = "";
-    double power = 1.0;
-    bool is_inverse = false;
 
     GeoDaWeight* w = 0;
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
@@ -277,10 +286,11 @@ GeoDaWeight* GdaGeojson::CreateKernelWeights(double dist_thres,
 }
 
 GeoDaWeight* GdaGeojson::CreateKernelKnnWeights(unsigned int k,
-                                             const std::string& kernel,
-                                             bool adaptive_bandwidth,
-                                             bool use_kernel_diagonals,
-                                             bool is_arc, bool is_mile)
+                                                const std::string& kernel,
+                                                bool adaptive_bandwidth,
+                                                bool use_kernel_diagonals,
+                                                double power, bool is_inverse,
+                                                bool is_arc, bool is_mile)
 {
     std::stringstream w_uid;
     w_uid << "w_kernel_knn";
@@ -293,8 +303,6 @@ GeoDaWeight* GdaGeojson::CreateKernelKnnWeights(unsigned int k,
     w_uid << is_mile;
     std::string w_uid_str = w_uid.str();
 
-    double power = 1.0;
-    bool is_inverse = false;
     double bandwidth = 0.0;
     std::string polyid = "";
 

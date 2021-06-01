@@ -37,6 +37,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORT_NAME='jsgeoda'")
 
 set(src
 		src/jsgeoda.cpp
+		src/jsgeoda_breaks.cpp
 		src/jsgeoda_weights.cpp
 		src/geojson.cpp
 		libgeoda_src/weights/GeodaWeight.cpp

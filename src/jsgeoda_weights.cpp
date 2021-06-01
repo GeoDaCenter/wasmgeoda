@@ -3,26 +3,9 @@
 #endif
 
 #include <iostream>
-#include <sstream>
-#include <vector>
-
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
-#include <boost/algorithm/string.hpp>
-
-#include "../libgeoda_src/sa/UniLocalMoran.h"
-#include "../libgeoda_src/sa/UniG.h"
-#include "../libgeoda_src/sa/UniGstar.h"
-#include "../libgeoda_src/sa/UniGeary.h"
-#include "../libgeoda_src/sa/UniJoinCount.h"
-#include "../libgeoda_src/clustering/DorlingCartogram.h"
 #include "../libgeoda_src/weights/GalWeight.h"
 #include "../libgeoda_src/GenUtils.h"
-#include "../libgeoda_src/gda_weights.h"
-#include "../libgeoda_src/gda_sa.h"
-#include "../libgeoda_src/gda_clustering.h"
-
 #include "geojson.h"
 #include "jsgeoda.h"
 
@@ -98,7 +81,7 @@ WeightsResult dist_weights(std::string map_uid, double dist_thres, double power,
 }
 
 WeightsResult kernel_weights(std::string map_uid, int k, std::string kernel, bool adaptive_bandwidth,
-        bool use_kernel_diagonals, bool is_arc, bool is_mile)
+        bool use_kernel_diagonals, double power, bool is_inverse, bool is_arc, bool is_mile)
 {
     std::cout << "kernel_weights()" << map_uid << std::endl;
     WeightsResult rst;
@@ -107,14 +90,14 @@ WeightsResult kernel_weights(std::string map_uid, int k, std::string kernel, boo
     if (json_map) {
         std::string kernel_str(kernel);
         GeoDaWeight *w = json_map->CreateKernelKnnWeights(k, kernel_str, adaptive_bandwidth, use_kernel_diagonals,
-                is_arc, is_mile);
+                power, is_inverse, is_arc, is_mile);
         set_weights_content(w, rst);
     }
     return rst;
 }
 
 WeightsResult kernel_bandwidth_weights(std::string map_uid, double dist_thres, std::string kernel,
-    bool use_kernel_diagonals, bool is_arc, bool is_mile)
+    bool use_kernel_diagonals, double power, bool is_inverse, bool is_arc, bool is_mile)
 {
     std::cout << "kernel_bandwidth_weights()" << map_uid << std::endl;
     WeightsResult rst;
@@ -122,7 +105,8 @@ WeightsResult kernel_bandwidth_weights(std::string map_uid, double dist_thres, s
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         std::string kernel_str(kernel);
-        GeoDaWeight *w = json_map->CreateKernelWeights(dist_thres, kernel_str, use_kernel_diagonals, is_arc, is_mile);
+        GeoDaWeight *w = json_map->CreateKernelWeights(dist_thres, kernel_str, use_kernel_diagonals, power, is_inverse,
+                                                       is_arc, is_mile);
         set_weights_content(w, rst);
     }
     return rst;
