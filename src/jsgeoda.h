@@ -121,4 +121,76 @@ std::vector<double> spatial_eb(const std::vector<double>& event_data,
                                const std::vector<double>& base_data,
                                const std::string map_uid,
                                const std::string& weight_uid);
+
+/**
+ * Functions of LISA
+ */
+// represent lisa results
+struct LisaResult {
+    bool is_valid;
+    std::vector<double> sig_local_vec;
+    std::vector<int> sig_cat_vec;
+    std::vector<int> cluster_vec;
+    std::vector<double> lag_vec;
+    std::vector<double> lisa_vec;
+    std::vector<int> nn_vec;
+    std::vector<std::string> labels;
+    std::vector<std::string> colors;
+
+    bool get_is_valid() { return is_valid; }
+    std::vector<double> get_sig_local() { return sig_local_vec;}
+    std::vector<int> get_sig_cat() { return sig_cat_vec;}
+    std::vector<int>  get_cluster() { return cluster_vec;}
+    std::vector<double>  get_lag() { return lag_vec;}
+    std::vector<double>  get_lisa() { return lisa_vec;}
+    std::vector<int>  get_nn() { return nn_vec;}
+    std::vector<std::string>  get_labels() { return labels;}
+    std::vector<std::string>  get_colors() { return colors;}
+};
+
+class LISA;
+
+void set_lisa_content(LISA* lisa, LisaResult& rst);
+
+LisaResult local_moran(const std::string map_uid, const std::string weight_uid, const std::vector<double>& vals,
+                       const std::vector<int>& undefs, double significance_cutoff, int permutations,
+                       const std::string& permutation_method, int last_seed_used);
+
+LisaResult local_g(const std::string map_uid, const std::string weight_uid, const std::vector<double>& vals,
+                   const std::vector<int>& undefs, double significance_cutoff, int permutations,
+                   const std::string& permutation_method, int last_seed_used);
+
+LisaResult local_gstar(const std::string map_uid, const std::string weight_uid, const std::vector<double>& vals,
+                   const std::vector<int>& undefs, double significance_cutoff, int permutations,
+                   const std::string& permutation_method, int last_seed_used);
+
+LisaResult local_geary(const std::string map_uid, const std::string weight_uid, const std::vector<double>& vals,
+                       const std::vector<int>& undefs, double significance_cutoff, int permutations,
+                       const std::string& permutation_method, int last_seed_used);
+
+LisaResult local_joincount(const std::string map_uid, const std::string weight_uid, const std::vector<double>& vals,
+                       const std::vector<int>& undefs, double significance_cutoff, int permutations,
+                       const std::string& permutation_method, int last_seed_used);
+
+LisaResult local_moran_eb(const std::string map_uid, const std::string weight_uid, const std::vector<double>& vals,
+                       const std::vector<double>& base_vals, double significance_cutoff, int permutations,
+                       const std::string& permutation_method, int last_seed_used);
+
+LisaResult quantile_lisa(const std::string map_uid, const std::string weight_uid, int k, int quantile,
+                         const std::vector<double>& vals, const std::vector<int>& undefs, double significance_cutoff,
+                         int permutations, const std::string& permutation_method, int last_seed_used);
+/**
+ * Functions of cartogram
+ */
+
+struct CartogramResult {
+    std::vector<double> x;
+    std::vector<double> y;
+    std::vector<double> r;
+
+    std::vector<double> get_x() { return x;}
+    std::vector<double> get_y() { return y;}
+    std::vector<double> get_radius() { return r;}
+};
+
 #endif //JSGEODA_JSGEODA_H

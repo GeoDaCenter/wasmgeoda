@@ -11,16 +11,10 @@
 #include <rapidjson/stringbuffer.h>
 #include <boost/algorithm/string.hpp>
 
-#include "../libgeoda_src/sa/UniLocalMoran.h"
-#include "../libgeoda_src/sa/UniG.h"
-#include "../libgeoda_src/sa/UniGstar.h"
-#include "../libgeoda_src/sa/UniGeary.h"
-#include "../libgeoda_src/sa/UniJoinCount.h"
 #include "../libgeoda_src/clustering/DorlingCartogram.h"
 #include "../libgeoda_src/weights/GalWeight.h"
 #include "../libgeoda_src/GenUtils.h"
 #include "../libgeoda_src/gda_weights.h"
-#include "../libgeoda_src/gda_sa.h"
 #include "../libgeoda_src/gda_clustering.h"
 #include "../libgeoda_src/libgeoda.h"
 
@@ -153,190 +147,7 @@ bool is_numeric_col(std::string map_uid, std::string col_name) {
     return false;
 }
 
-// represent lisa results
-struct LisaResult {
-    bool is_valid;
-    std::vector<double> sig_local_vec;
-    std::vector<int> sig_cat_vec;
-    std::vector<int> cluster_vec;
-    std::vector<double> lag_vec;
-    std::vector<double> lisa_vec;
-    std::vector<int> nn_vec;
-    std::vector<std::string> labels;
-    std::vector<std::string> colors;
 
-    bool get_is_valid() { return is_valid; }
-    std::vector<double> get_sig_local() { return sig_local_vec;}
-    std::vector<int> get_sig_cat() { return sig_cat_vec;}
-    std::vector<int>  get_cluster() { return cluster_vec;}
-    std::vector<double>  get_lag() { return lag_vec;}
-    std::vector<double>  get_lisa() { return lisa_vec;}
-    std::vector<int>  get_nn() { return nn_vec;}
-    std::vector<std::string>  get_labels() { return labels;}
-    std::vector<std::string>  get_colors() { return colors;}
-};
-
-void set_lisa_content(LISA* lisa, LisaResult& rst)
-{
-    rst.is_valid = true;
-    rst.sig_local_vec = lisa->GetLocalSignificanceValues();
-    rst.sig_cat_vec = lisa->GetSigCatIndicators();
-    rst.cluster_vec = lisa->GetClusterIndicators();
-    rst.lag_vec = lisa->GetSpatialLagValues();
-    rst.lisa_vec = lisa->GetLISAValues();
-    rst.nn_vec = lisa->GetNumNeighbors();
-    rst.labels = lisa->GetLabels();
-    rst.colors = lisa->GetColors();
-}
-
-LisaResult local_moran(const std::string map_uid, const std::string weight_uid, std::vector<double> vals)
-{
-    LisaResult rst;
-    rst.is_valid = false;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->GetWeights(weight_uid);
-        if (w) {
-            std::vector<bool> undefs;
-            double significance_cutoff = 0.05;
-            int nCPUs = 6;
-            int permutations = 999;
-            std::string permutation_method = "complete";
-            int last_seed_used = 123456789;
-            LISA* lisa = gda_localmoran(w, vals, undefs, significance_cutoff, nCPUs, permutations,
-                                        permutation_method, last_seed_used);
-            set_lisa_content(lisa, rst);
-            std::cout << rst.lisa_vec[0] << std::endl;
-            delete lisa;
-        }
-    }
-    return rst;
-}
-
-LisaResult local_moran1(const std::string map_uid, const std::string weight_uid, std::vector<double> vals,
-        std::vector<bool> undefs, double significance_cutoff, int nCPUs, int permutations, const std::string&
-        permutation_method, int last_seed_used)
-{
-    LisaResult rst;
-    rst.is_valid = false;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->GetWeights(weight_uid);
-        if (w) {
-            LISA* lisa = gda_localmoran(w, vals, undefs, significance_cutoff, nCPUs, permutations,
-                    permutation_method, last_seed_used);
-            set_lisa_content(lisa, rst);
-            delete lisa;
-        }
-    }
-    return rst;
-}
-
-LisaResult local_g(const std::string map_uid, const std::string weight_uid, std::string col_name, double significance_cutoff,
-                   int nCPUs, int permutations, const std::string& permutation_method, int last_seed_used)
-{
-    LisaResult rst;
-    rst.is_valid = false;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->GetWeights(weight_uid);
-        if (w) {
-            std::vector<double> values = json_map->GetNumericCol(col_name);
-            std::vector<bool> undefs;
-            LISA* lisa = gda_localg(w, values, undefs, significance_cutoff, nCPUs, permutations,
-                                    permutation_method, last_seed_used);
-            set_lisa_content(lisa, rst);
-            delete lisa;
-        }
-    }
-    return rst;
-}
-
-LisaResult local_gstar(const std::string map_uid, const std::string weight_uid, std::string col_name, double significance_cutoff,
-                       int nCPUs, int permutations, const std::string& permutation_method, int last_seed_used)
-{
-    LisaResult rst;
-    rst.is_valid = false;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->GetWeights(weight_uid);
-        if (w) {
-            std::vector<double> values = json_map->GetNumericCol(col_name);
-            std::vector<bool> undefs;
-            LISA* lisa = gda_localgstar(w, values, undefs, significance_cutoff, nCPUs, permutations,
-                                        permutation_method, last_seed_used);
-            set_lisa_content(lisa, rst);
-            delete lisa;
-        }
-    }
-    return rst;
-}
-
-LisaResult local_gstar1(const std::string map_uid, const std::string weight_uid, std::vector<double> vals,
-        std::vector<bool> undefs, double significance_cutoff, int nCPUs, int permutations, const std::string&
-        permutation_method, int last_seed_used)
-{
-    LisaResult rst;
-    rst.is_valid = false;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->GetWeights(weight_uid);
-        if (w) {
-            LISA* lisa = gda_localgstar(w, vals, undefs, significance_cutoff, nCPUs, permutations,
-                                        permutation_method, last_seed_used);
-            set_lisa_content(lisa, rst);
-            delete lisa;
-        }
-    }
-    return rst;
-}
-
-LisaResult local_geary(const std::string map_uid, const std::string weight_uid, std::string col_name, double significance_cutoff,
-                       int nCPUs, int permutations, const std::string& permutation_method, int last_seed_used)
-{
-    LisaResult rst;
-    rst.is_valid = false;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->GetWeights(weight_uid);
-        if (w) {
-            std::vector<double> values = json_map->GetNumericCol(col_name);
-            std::vector<bool> undefs;
-            LISA* lisa = gda_localgeary(w, values, undefs, significance_cutoff, nCPUs, permutations,
-                    permutation_method, last_seed_used);
-            set_lisa_content(lisa, rst);
-            delete lisa;
-        }
-    }
-    return rst;
-}
-
-LisaResult local_joincount(const std::string map_uid, const std::string weight_uid, std::string col_name, double significance_cutoff,
-                           int nCPUs, int permutations, const std::string& permutation_method, int last_seed_used)
-{
-    LisaResult rst;
-    rst.is_valid = false;
-
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->GetWeights(weight_uid);
-        if (w) {
-            std::vector<double> values = json_map->GetNumericCol(col_name);
-            std::vector<bool> undefs;
-            LISA* lisa = gda_localjoincount(w, values, undefs, significance_cutoff, nCPUs, permutations,
-                                       permutation_method, last_seed_used);
-            set_lisa_content(lisa, rst);
-            delete lisa;
-        }
-    }
-    return rst;
-}
 
 std::vector<int> get_neighbors(const std::string map_uid, const std::string weight_uid, int id)
 {
@@ -378,16 +189,6 @@ std::vector<int> redcap(const std::string map_uid, const std::string weight_uid,
     }
     return std::vector<int>();
 }
-
-struct CartogramResult {
-    std::vector<double> x;
-    std::vector<double> y;
-    std::vector<double> r;
-
-    std::vector<double> get_x() { return x;}
-    std::vector<double> get_y() { return y;}
-    std::vector<double> get_radius() { return r;}
-};
 
 CartogramResult cartogram(const std::string map_uid, std::vector<double> values)
 {
@@ -489,12 +290,12 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
     emscripten::function("kernel_bandwidth_weights", &kernel_bandwidth_weights);
 
     emscripten::function("local_moran", &local_moran);
-    emscripten::function("local_moran1", &local_moran1);
+    emscripten::function("local_moran_eb", &local_moran_eb);
     emscripten::function("local_g", &local_g);
     emscripten::function("local_gstar", &local_gstar);
-    emscripten::function("local_gstar1", &local_gstar1);
     emscripten::function("local_geary", &local_geary);
     emscripten::function("local_joincount", &local_joincount);
+    emscripten::function("quantile_lisa", &quantile_lisa);
 
     emscripten::function("redcap", &redcap);
 

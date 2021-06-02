@@ -24,6 +24,7 @@ SET(CMAKE_CXX_COMPILER em++)
 #set( CMAKE_CXX_FLAGS "-s DISABLE_EXCEPTION_CATCHING=0 -s TOTAL_MEMORY=1812070400 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=8 -s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
 #set( CMAKE_CXX_FLAGS "-O2 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=200MB -s USE_PTHREADS=0 -s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
 set(CMAKE_CXX_FLAGS "-O3 -DNDEBUG --bind -s ASSERTIONS=0 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1")
+#set(CMAKE_CXX_FLAGS "-g --bind -s ASSERTIONS=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_FILESYSTEM=1 -s USE_BOOST_HEADERS=1")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s FILESYSTEM=1 -s FORCE_FILESYSTEM=1")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D MEMFS")
@@ -63,7 +64,7 @@ set(src
 		libgeoda_src/clustering/redcap.cpp
 		libgeoda_src/clustering/redcap_wrapper.cpp
 		libgeoda_src/clustering/DorlingCartogram.cpp
-)
+		src/jsgeoda_lisa.cpp)
 
 
 
