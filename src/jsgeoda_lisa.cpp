@@ -4,10 +4,6 @@
 
 #include "../libgeoda_src/sa/UniLocalMoran.h"
 #include "../libgeoda_src/sa/UniG.h"
-#include "../libgeoda_src/sa/LISA.h"
-#include "../libgeoda_src/sa/UniGstar.h"
-#include "../libgeoda_src/sa/UniGeary.h"
-#include "../libgeoda_src/sa/UniJoinCount.h"
 #include "../libgeoda_src/gda_sa.h"
 #include "../libgeoda_src/weights/GalWeight.h"
 #include "../libgeoda_src/GenUtils.h"

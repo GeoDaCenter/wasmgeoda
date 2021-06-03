@@ -165,31 +165,6 @@ std::vector<int> get_neighbors(const std::string map_uid, const std::string weig
     return nbrs;
 }
 
-std::vector<int> redcap(const std::string map_uid, const std::string weight_uid,
-        int k, std::vector<std::vector<double> > data, std::vector<double> bound_vals, double min_bound,
-        std::string method, std::string scale_method, std::string distance_method, int seed, int cpu_threads)
-{
-    GdaGeojson *json_map = geojson_maps[map_uid];
-    if (json_map) {
-        GeoDaWeight *w = json_map->GetWeights(weight_uid);
-        if (w) {
-            if (scale_method.empty()) {
-                scale_method = "standardize";
-            }
-            if (distance_method.empty()) {
-                distance_method = "euclidean";
-            }
-            if ( bound_vals.empty()) {
-                min_bound = -1;
-            }
-            std::vector<std::vector<int> > clusters = gda_redcap(k, w, data, scale_method, method, distance_method,
-                    bound_vals, min_bound, seed, cpu_threads);
-            return GenUtils::flat_2dclusters(w->num_obs, clusters);
-        }
-    }
-    return std::vector<int>();
-}
-
 CartogramResult cartogram(const std::string map_uid, std::vector<double> values)
 {
     CartogramResult r;

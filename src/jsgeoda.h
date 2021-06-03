@@ -217,4 +217,72 @@ struct CartogramResult {
     std::vector<double> get_radius() { return r;}
 };
 
+/**
+ * Functions of clustering
+ */
+
+struct ClusteringResult {
+    bool is_valid;
+    double total_ss;
+    double between_ss;
+    std::vector<double> within_ss;
+    double ratio;
+    std::vector<int> cluster_vec;
+
+    bool get_is_valid() { return is_valid; }
+    std::vector<int> get_clusters() { return cluster_vec;}
+    double get_total_ss() { return total_ss;}
+    double get_between_ss() { return between_ss;}
+    std::vector<double> get_within_ss() { return within_ss;}
+    double get_ratio() { return ratio;}
+};
+
+ClusteringResult redcap(const std::string map_uid, const std::string weight_uid, int k, const std::string &method,
+                        const std::vector<std::vector<double> > &data,
+                        const std::vector<std::vector<int> > &undefs,
+                        const std::vector<double>& bound_vals, double min_bound,
+                        const std::string& scale_method, const std::string &distance_method);
+
+ClusteringResult azp_greedy(const std::string map_uid, const std::string weight_uid, int k,
+                     const std::vector<std::vector<double> > &data, int inits, const std::vector<int>& init_regions,
+                     const std::string& scale_method, const std::string &distance_method,
+                     const std::vector<std::vector<double> >& min_bounds_values, const std::vector<double>& min_bounds,
+                     const std::vector<std::vector<double> >& max_bounds_values, const std::vector<double>& max_bounds,
+                     int seed);
+
+ClusteringResult azp_sa(const std::string map_uid, const std::string weight_uid, int k, double cooling_rate, int sa_maxit,
+                        const std::vector<std::vector<double> > &data, int inits, const std::vector<int>& init_regions,
+                        const std::string& scale_method, const std::string &distance_method,
+                        const std::vector<std::vector<double> >& min_bounds_values, const std::vector<double>& min_bounds,
+                        const std::vector<std::vector<double> >& max_bounds_values, const std::vector<double>& max_bounds,
+                        int seed);
+
+ClusteringResult azp_tabu(const std::string map_uid, const std::string weight_uid, int k, int tabu_length, int conv_tabu,
+                          const std::vector<std::vector<double> > &data, int inits, const std::vector<int>& init_regions,
+                          const std::string& scale_method, const std::string &distance_method,
+                          const std::vector<std::vector<double> >& min_bounds_values, const std::vector<double>& min_bounds,
+                          const std::vector<std::vector<double> >& max_bounds_values, const std::vector<double>& max_bounds,
+                          int seed);
+
+ClusteringResult maxp_greedy(const std::string map_uid, const std::string weight_uid,
+                             const std::vector<std::vector<double> > &data, int iterations,
+                             const std::string& scale_method, const std::string &distance_method,
+                             const std::vector<std::vector<double> >& min_bounds_values, const std::vector<double>& min_bounds,
+                             const std::vector<std::vector<double> >& max_bounds_values, const std::vector<double>& max_bounds,
+                             int seed);
+
+ClusteringResult maxp_sa(const std::string map_uid, const std::string weight_uid,
+                         const std::vector<std::vector<double> > &data, int iterations, double cooling_rate, int sa_maxit,
+                         const std::string& scale_method, const std::string &distance_method,
+                         const std::vector<std::vector<double> >& min_bounds_values, const std::vector<double>& min_bounds,
+                         const std::vector<std::vector<double> >& max_bounds_values, const std::vector<double>& max_bounds,
+                         int seed);
+
+ClusteringResult maxp_tabu(const std::string map_uid, const std::string weight_uid,
+                           const std::vector<std::vector<double> > &data, int iterations, int tabu_length, int conv_tabu,
+                           const std::string& scale_method, const std::string &distance_method,
+                           const std::vector<std::vector<double> >& min_bounds_values, const std::vector<double>& min_bounds,
+                           const std::vector<std::vector<double> >& max_bounds_values, const std::vector<double>& max_bounds,
+                           int seed);
+
 #endif //JSGEODA_JSGEODA_H
