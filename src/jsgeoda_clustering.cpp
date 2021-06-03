@@ -11,7 +11,6 @@ extern std::map<std::string, GdaGeojson*> geojson_maps;
 
 ClusteringResult redcap(const std::string map_uid, const std::string weight_uid, int k, const std::string &method,
                         const std::vector<std::vector<double> > &data,
-                        const std::vector<std::vector<int> > &undefs,
                         const std::vector<double>& bound_vals, double min_bound,
                         const std::string& scale_method, const std::string &distance_method)
 {
@@ -24,7 +23,33 @@ ClusteringResult redcap(const std::string map_uid, const std::string weight_uid,
         if (w) {
             int nCPUs = 1;
             int seed = 123456789;// not used
-            std::vector<std::vector<int> > cluster_ids = gda_redcap(k, w, data, scale_method, method, distance_method, bound_vals, min_bound, seed, nCPUs);
+            std::vector<std::vector<int> > cluster_ids = gda_redcap(k, w, data, scale_method, method, distance_method,
+                                                                    bound_vals, min_bound, seed, nCPUs);
+
+            rst.is_valid = true;
+            rst.between_ss = gda_betweensumofsquare(cluster_ids, data);
+            rst.total_ss = gda_totalsumofsquare(data);
+            rst.ratio = rst.between_ss / rst.total_ss;
+            rst.within_ss = gda_withinsumofsquare(cluster_ids, data);
+        }
+    }
+    return rst;
+}
+
+ClusteringResult schc(const std::string map_uid, const std::string weight_uid, int k, const std::string &method,
+                        const std::vector<std::vector<double> > &data,
+                        const std::vector<double>& bound_vals, double min_bound,
+                        const std::string& scale_method, const std::string &distance_method)
+{
+    ClusteringResult rst;
+    rst.is_valid = false;
+
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        GeoDaWeight *w = json_map->GetWeights(weight_uid);
+        if (w) {
+            std::vector<std::vector<int> > cluster_ids = gda_schc(k, w, data, scale_method, method, distance_method,
+                                                                  bound_vals, min_bound);
 
             rst.is_valid = true;
             rst.between_ss = gda_betweensumofsquare(cluster_ids, data);

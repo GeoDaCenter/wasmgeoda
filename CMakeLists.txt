@@ -71,8 +71,11 @@ set(src
 		libgeoda_src/sa/MultiGeary.cpp
 		libgeoda_src/clustering/cluster.cpp
 		libgeoda_src/clustering/maxp_wrapper.cpp
-		libgeoda_src/clustering/redcap.cpp
 		libgeoda_src/clustering/redcap_wrapper.cpp
+		libgeoda_src/clustering/azp_wrapper.cpp
+		libgeoda_src/clustering/schc_wrapper.cpp
+		libgeoda_src/clustering/redcap.cpp
+		libgeoda_src/clustering/azp.cpp
 		libgeoda_src/clustering/DorlingCartogram.cpp
 		src/jsgeoda_lisa.cpp src/jsgeoda_clustering.cpp)
 

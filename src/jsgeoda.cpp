@@ -223,6 +223,7 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
         ;
 
     emscripten::class_<LisaResult>("LisaResult")
+        .function("is_valid", &LisaResult::get_is_valid)
         .function("significances", &LisaResult::get_sig_local)
         .function("sig_categories", &LisaResult::get_sig_cat)
         .function("clusters", &LisaResult::get_cluster)
@@ -234,6 +235,7 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
         ;
 
     emscripten::class_<WeightsResult>("WeightsResult")
+        .function("is_valid", &WeightsResult::get_is_valid)
         .function("get_weight_type", &WeightsResult::get_weight_type)
         .function("get_num_obs", &WeightsResult::get_num_obs)
         .function("get_is_symmetric", &WeightsResult::get_is_symmetric)
@@ -245,6 +247,15 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
         .function("get_mean_nbrs", &WeightsResult::get_mean_nbrs)
         .function("get_uid", &WeightsResult::get_uid)
         .function("get_map_uid", &WeightsResult::get_map_uid)
+        ;
+
+    emscripten::class_<ClusteringResult>("ClusteringResult")
+        .function("is_valid", &ClusteringResult::get_is_valid)
+        .function("clusters", &ClusteringResult::get_clusters)
+        .function("total_ss", &ClusteringResult::get_total_ss)
+        .function("between_ss", &ClusteringResult::get_between_ss)
+        .function("within_ss", &ClusteringResult::get_within_ss)
+        .function("ratio", &ClusteringResult::get_ratio)
         ;
 
     emscripten::function("new_geojsonmap", &new_geojsonmap);
@@ -277,6 +288,13 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
     emscripten::function("local_multigeary", &local_multigeary);
 
     emscripten::function("redcap", &redcap);
+    emscripten::function("schc", &schc);
+    emscripten::function("azp_greedy", &azp_greedy);
+    emscripten::function("azp_sa", &azp_sa);
+    emscripten::function("azp_tabu", &azp_tabu);
+    emscripten::function("maxp_greedy", &maxp_greedy);
+    emscripten::function("maxp_sa", &maxp_sa);
+    emscripten::function("maxp_tabu", &maxp_tabu);
 
     emscripten::function("natural_breaks", &natural_breaks);
     emscripten::function("quantile_breaks", &quantile_breaks);

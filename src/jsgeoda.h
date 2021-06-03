@@ -239,7 +239,11 @@ struct ClusteringResult {
 
 ClusteringResult redcap(const std::string map_uid, const std::string weight_uid, int k, const std::string &method,
                         const std::vector<std::vector<double> > &data,
-                        const std::vector<std::vector<int> > &undefs,
+                        const std::vector<double>& bound_vals, double min_bound,
+                        const std::string& scale_method, const std::string &distance_method);
+
+ClusteringResult schc(const std::string map_uid, const std::string weight_uid, int k, const std::string &method,
+                        const std::vector<std::vector<double> > &data,
                         const std::vector<double>& bound_vals, double min_bound,
                         const std::string& scale_method, const std::string &distance_method);
 
