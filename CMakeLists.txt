@@ -41,6 +41,14 @@ set(src
 		src/jsgeoda_breaks.cpp
 		src/jsgeoda_weights.cpp
 		src/geojson.cpp
+		libgeoda_src/knn/ANN.cpp
+		libgeoda_src/knn/kd_tree.cpp
+		libgeoda_src/knn/kd_split.cpp
+		libgeoda_src/knn/kd_util.cpp
+		libgeoda_src/knn/kd_search.cpp
+		libgeoda_src/knn/kd_dump.cpp
+		libgeoda_src/knn/kd_fix_rad_search.cpp
+		libgeoda_src/knn/kd_pr_search.cpp
 		libgeoda_src/weights/GeodaWeight.cpp
 		libgeoda_src/weights/GalWeight.cpp
 		libgeoda_src/weights/GwtWeight.cpp
@@ -59,6 +67,8 @@ set(src
 		libgeoda_src/sa/UniGeary.cpp
 		libgeoda_src/sa/UniJoinCount.cpp
 		libgeoda_src/sa/UniLocalMoran.cpp
+		libgeoda_src/sa/MultiJoinCount.cpp
+		libgeoda_src/sa/MultiGeary.cpp
 		libgeoda_src/clustering/cluster.cpp
 		libgeoda_src/clustering/maxp_wrapper.cpp
 		libgeoda_src/clustering/redcap.cpp

@@ -296,6 +296,10 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
     emscripten::function("local_geary", &local_geary);
     emscripten::function("local_joincount", &local_joincount);
     emscripten::function("quantile_lisa", &quantile_lisa);
+    emscripten::function("neighbor_match_test", &neighbor_match_test);
+    emscripten::function("multi_quantile_lisa", &multi_quantile_lisa);
+    emscripten::function("local_multijoincount", &local_multijoincount);
+    emscripten::function("local_multigeary", &local_multigeary);
 
     emscripten::function("redcap", &redcap);
 

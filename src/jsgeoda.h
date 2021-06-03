@@ -172,13 +172,37 @@ LisaResult local_joincount(const std::string map_uid, const std::string weight_u
                        const std::vector<int>& undefs, double significance_cutoff, int permutations,
                        const std::string& permutation_method, int last_seed_used);
 
-LisaResult local_moran_eb(const std::string map_uid, const std::string weight_uid, const std::vector<double>& vals,
-                       const std::vector<double>& base_vals, double significance_cutoff, int permutations,
-                       const std::string& permutation_method, int last_seed_used);
-
 LisaResult quantile_lisa(const std::string map_uid, const std::string weight_uid, int k, int quantile,
                          const std::vector<double>& vals, const std::vector<int>& undefs, double significance_cutoff,
                          int permutations, const std::string& permutation_method, int last_seed_used);
+
+std::vector<std::vector<double> > neighbor_match_test(const std::string map_uid,
+                                                      int knn, double power, bool is_inverse, bool is_arc,
+                                                      bool is_mile, const std::vector<std::vector<double> >& data,
+                                                      const std::string& scale_method, const std::string& dist_type);
+
+LisaResult local_moran_eb(const std::string map_uid, const std::string weight_uid, const std::vector<double>& vals,
+                          const std::vector<double>& base_vals, double significance_cutoff, int permutations,
+                          const std::string& permutation_method, int last_seed_used);
+
+LisaResult multi_quantile_lisa(const std::string map_uid, const std::string weight_uid,
+                               const std::vector<int> &k_s, const std::vector<int> &quantile_s,
+                               const std::vector<std::vector<double> > &data,
+                               const std::vector<std::vector<int> > &undefs,
+                               double significance_cutoff, int permutations,
+                               const std::string& permutation_method, int last_seed_used);
+
+LisaResult local_multijoincount(const std::string map_uid, const std::string weight_uid,
+                           const std::vector<std::vector<double> > &data,
+                           const std::vector<std::vector<int> > &undefs, double significance_cutoff,
+                           int permutations, const std::string& permutation_method, int last_seed_used);
+
+LisaResult local_multigeary(const std::string map_uid, const std::string weight_uid,
+                            const std::vector<std::vector<double> > &data,
+                            const std::vector<std::vector<int> > &undefs, double significance_cutoff,
+                            int permutations, const std::string& permutation_method, int last_seed_used);
+
+
 /**
  * Functions of cartogram
  */
