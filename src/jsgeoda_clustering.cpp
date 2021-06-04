@@ -31,6 +31,7 @@ ClusteringResult redcap(const std::string map_uid, const std::string weight_uid,
             rst.total_ss = gda_totalsumofsquare(data);
             rst.ratio = rst.between_ss / rst.total_ss;
             rst.within_ss = gda_withinsumofsquare(cluster_ids, data);
+            rst.cluster_vec = GenUtils::flat_2dclusters(w->num_obs, cluster_ids);
         }
     }
     return rst;
@@ -56,6 +57,7 @@ ClusteringResult schc(const std::string map_uid, const std::string weight_uid, i
             rst.total_ss = gda_totalsumofsquare(data);
             rst.ratio = rst.between_ss / rst.total_ss;
             rst.within_ss = gda_withinsumofsquare(cluster_ids, data);
+            rst.cluster_vec = GenUtils::flat_2dclusters(w->num_obs, cluster_ids);
         }
     }
     return rst;
@@ -95,6 +97,7 @@ ClusteringResult azp_greedy(const std::string map_uid, const std::string weight_
             rst.total_ss = gda_totalsumofsquare(data);
             rst.ratio = rst.between_ss / rst.total_ss;
             rst.within_ss = gda_withinsumofsquare(cluster_ids, data);
+            rst.cluster_vec = GenUtils::flat_2dclusters(w->num_obs, cluster_ids);
         }
     }
     return rst;
@@ -134,6 +137,7 @@ ClusteringResult azp_sa(const std::string map_uid, const std::string weight_uid,
             rst.total_ss = gda_totalsumofsquare(data);
             rst.ratio = rst.between_ss / rst.total_ss;
             rst.within_ss = gda_withinsumofsquare(cluster_ids, data);
+            rst.cluster_vec = GenUtils::flat_2dclusters(w->num_obs, cluster_ids);
         }
     }
     return rst;
@@ -173,6 +177,7 @@ ClusteringResult azp_tabu(const std::string map_uid, const std::string weight_ui
             rst.total_ss = gda_totalsumofsquare(data);
             rst.ratio = rst.between_ss / rst.total_ss;
             rst.within_ss = gda_withinsumofsquare(cluster_ids, data);
+            rst.cluster_vec = GenUtils::flat_2dclusters(w->num_obs, cluster_ids);
         }
     }
     return rst;
@@ -212,6 +217,7 @@ ClusteringResult maxp_greedy(const std::string map_uid, const std::string weight
             rst.total_ss = gda_totalsumofsquare(data);
             rst.ratio = rst.between_ss / rst.total_ss;
             rst.within_ss = gda_withinsumofsquare(cluster_ids, data);
+            rst.cluster_vec = GenUtils::flat_2dclusters(w->num_obs, cluster_ids);
         }
     }
     return rst;
@@ -251,6 +257,7 @@ ClusteringResult maxp_sa(const std::string map_uid, const std::string weight_uid
             rst.total_ss = gda_totalsumofsquare(data);
             rst.ratio = rst.between_ss / rst.total_ss;
             rst.within_ss = gda_withinsumofsquare(cluster_ids, data);
+            rst.cluster_vec = GenUtils::flat_2dclusters(w->num_obs, cluster_ids);
         }
     }
     return rst;
@@ -290,6 +297,7 @@ ClusteringResult maxp_tabu(const std::string map_uid, const std::string weight_u
             rst.total_ss = gda_totalsumofsquare(data);
             rst.ratio = rst.between_ss / rst.total_ss;
             rst.within_ss = gda_withinsumofsquare(cluster_ids, data);
+            rst.cluster_vec = GenUtils::flat_2dclusters(w->num_obs, cluster_ids);
         }
     }
     return rst;

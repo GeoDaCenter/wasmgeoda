@@ -77,7 +77,8 @@ set(src
 		libgeoda_src/clustering/redcap.cpp
 		libgeoda_src/clustering/azp.cpp
 		libgeoda_src/clustering/DorlingCartogram.cpp
-		src/jsgeoda_lisa.cpp src/jsgeoda_clustering.cpp)
+		src/jsgeoda_lisa.cpp
+		src/jsgeoda_clustering.cpp )
 
 
 
