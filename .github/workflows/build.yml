@@ -35,6 +35,7 @@ jobs:
       # Build wasmgeoda
       - name: Build wasmgeoda
         run: |
+          rm libgeoda_src
           git clone --recursive https://github.com/geodacenter/libgeoda libgeoda_src
           ./build.sh
       
