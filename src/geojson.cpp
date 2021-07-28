@@ -156,10 +156,10 @@ GeoDaWeight* GdaGeojson::CreateQueenWeights(unsigned int order,
     GeoDaWeight* w = 0;
 
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
-        std::cout << "GdaGeojson::CreateQueenWeights() direct return:" << w_uid_str << std::endl;
+        //std::cout << "GdaGeojson::CreateQueenWeights() direct return:" << w_uid_str << std::endl;
         w = this->weights_dict[w_uid.str()];
     } else {
-        std::cout << "GdaGeojson::CreateQueenWeights()" << std::endl;
+        //std::cout << "GdaGeojson::CreateQueenWeights()" << std::endl;
         w = gda_queen_weights((AbstractGeoDa*)this, order, include_lower_order, precision_threshold);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
@@ -204,7 +204,7 @@ GeoDaWeight* GdaGeojson::CreateKnnWeights(unsigned int k,
     w_uid << is_arc;
     w_uid << is_mile;
     std::string w_uid_str = w_uid.str();
-    std::cout << "CreateKnnWeights()" << w_uid_str << std::endl;
+    //std::cout << "CreateKnnWeights()" << w_uid_str << std::endl;
 
     std::string kernel = "";
     double bandwidth = 0.0;
@@ -395,7 +395,7 @@ void GdaGeojson::readFeatureCollection(const rapidjson::Value& features)
     const auto &fa = features.GetArray();
     this->main_map.num_obs = fa.Size();
 
-    std::cout <<"GdaGeojson::readFeatureCollection(): n="<< fa.Size() << std::endl;
+    //std::cout <<"GdaGeojson::readFeatureCollection(): n="<< fa.Size() << std::endl;
 
     for (size_t i=0; i<fa.Size(); ++i) {
         const rapidjson::Value &geom = fa[i]["geometry"];
@@ -411,6 +411,7 @@ void GdaGeojson::readFeatureCollection(const rapidjson::Value& features)
             } else {
                 data_string[var_name].push_back(iter->value.GetString());
             }
+            data_colnames.push_back(var_name);
         }
 
         // get geometry
@@ -421,7 +422,7 @@ void GdaGeojson::readFeatureCollection(const rapidjson::Value& features)
             this->createGeometryFeature(i, geom);
         }
     }
-    std::cout <<"GdaGeojson::readFeatureCollection(): done"<< std::endl;
+    //std::cout <<"GdaGeojson::readFeatureCollection(): done"<< std::endl;
 }
 
 void GdaGeojson::createGeometryFeature(size_t i, const rapidjson::Value& geom)

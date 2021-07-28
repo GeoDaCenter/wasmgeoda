@@ -76,7 +76,7 @@ void new_shapefilemap(std::string file_name) {
 */
 
 int get_num_obs(std::string map_uid) {
-	std::cout << "get_num_obs()" << map_uid << std::endl;
+	//std::cout << "get_num_obs()" << map_uid << std::endl;
 	GdaGeojson *json_map = geojson_maps[map_uid];
 	if (json_map) {
 		return json_map->GetNumObs();
@@ -93,7 +93,7 @@ std::vector<double> get_bounds(std::string map_uid) {
 }
 
 int get_map_type(std::string map_uid) {
-	std::cout << "get_map_type()" << map_uid << std::endl;
+	//std::cout << "get_map_type()" << map_uid << std::endl;
 	GdaGeojson *json_map = geojson_maps[map_uid];
 	if (json_map) {
 		return json_map->GetMapType();
@@ -122,7 +122,7 @@ CCentroids get_centroids(std::string map_uid)
 }
 
 std::vector<double> get_numeric_col(std::string map_uid, std::string col_name) {
-    std::cout << "get_numeric_col()" << map_uid << std::endl;
+    //std::cout << "get_numeric_col()" << map_uid << std::endl;
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         return json_map->GetNumericCol(col_name);
@@ -130,8 +130,17 @@ std::vector<double> get_numeric_col(std::string map_uid, std::string col_name) {
     return std::vector<double>();
 }
 
+std::vector<std::string> get_col_names(const std::string& map_uid)
+{
+    GdaGeojson *json_map = geojson_maps[map_uid];
+    if (json_map) {
+        return json_map->GetColNames();
+    }
+    return std::vector<std::string>();
+}
+
 std::vector<std::string> get_string_col(std::string map_uid, std::string col_name) {
-    std::cout << "get_string_col()" << map_uid << std::endl;
+    //std::cout << "get_string_col()" << map_uid << std::endl;
     GdaGeojson *json_map = geojson_maps[map_uid];
     if (json_map) {
         return json_map->GetStringCol(col_name);
@@ -259,6 +268,7 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
         ;
 
     emscripten::function("new_geojsonmap", &new_geojsonmap);
+    emscripten::function("free_geojsonmap", &free_geojsonmap);
 
     emscripten::function("get_bounds", &get_bounds);
     emscripten::function("get_num_obs", &get_num_obs);
@@ -266,6 +276,7 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
     emscripten::function("is_numeric_col", &is_numeric_col);
     emscripten::function("get_numeric_col", &get_numeric_col);
     emscripten::function("get_string_col", &get_string_col);
+    emscripten::function("get_col_names", &get_col_names);
 
     emscripten::function("min_distance_threshold", &get_min_dist_threshold);
     emscripten::function("queen_weights", &queen_weights);

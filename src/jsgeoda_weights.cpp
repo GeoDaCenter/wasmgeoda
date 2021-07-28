@@ -30,12 +30,12 @@ void set_weights_content(GeoDaWeight* w, const string& map_uid, WeightsResult& r
 
 WeightsResult queen_weights(std::string map_uid, int order, int include_lower_order, double precision_threshold)
 {
-	std::cout << "queen_weights(0)" << map_uid << std::endl;
+	//std::cout << "queen_weights(0)" << map_uid << std::endl;
     WeightsResult rst;
     rst.is_valid = false;
 	GdaGeojson *json_map = geojson_maps[map_uid];
 	if (json_map) {
-	    std::cout << "enter queen_weights();" << std::endl;
+	    //std::cout << "enter queen_weights();" << std::endl;
 		GeoDaWeight *w = json_map->CreateQueenWeights(order, include_lower_order, precision_threshold);
 	    set_weights_content(w, map_uid, rst);
 	}
@@ -44,7 +44,7 @@ WeightsResult queen_weights(std::string map_uid, int order, int include_lower_or
 
 WeightsResult rook_weights(std::string map_uid, int order, int include_lower_order, double precision_threshold)
 {
-    std::cout << "rook_weights()" << map_uid << std::endl;
+    //std::cout << "rook_weights()" << map_uid << std::endl;
     WeightsResult rst;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
@@ -57,7 +57,7 @@ WeightsResult rook_weights(std::string map_uid, int order, int include_lower_ord
 
 WeightsResult knn_weights(std::string map_uid, int k, double power, bool is_inverse, bool is_arc, bool is_mile)
 {
-    std::cout << "knn_weights()" << map_uid << std::endl;
+    //std::cout << "knn_weights()" << map_uid << std::endl;
     WeightsResult rst;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
@@ -70,7 +70,7 @@ WeightsResult knn_weights(std::string map_uid, int k, double power, bool is_inve
 
 WeightsResult dist_weights(std::string map_uid, double dist_thres, double power, bool is_inverse, bool is_arc, bool is_mile)
 {
-    std::cout << "distance_weights()" << map_uid << std::endl;
+    //std::cout << "distance_weights()" << map_uid << std::endl;
     WeightsResult rst;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
@@ -84,7 +84,7 @@ WeightsResult dist_weights(std::string map_uid, double dist_thres, double power,
 WeightsResult kernel_weights(std::string map_uid, int k, std::string kernel, bool adaptive_bandwidth,
         bool use_kernel_diagonals, double power, bool is_inverse, bool is_arc, bool is_mile)
 {
-    std::cout << "kernel_weights()" << map_uid << std::endl;
+    //std::cout << "kernel_weights()" << map_uid << std::endl;
     WeightsResult rst;
 
     GdaGeojson *json_map = geojson_maps[map_uid];
@@ -100,7 +100,7 @@ WeightsResult kernel_weights(std::string map_uid, int k, std::string kernel, boo
 WeightsResult kernel_bandwidth_weights(std::string map_uid, double dist_thres, std::string kernel,
     bool use_kernel_diagonals, double power, bool is_inverse, bool is_arc, bool is_mile)
 {
-    std::cout << "kernel_bandwidth_weights()" << map_uid << std::endl;
+    //std::cout << "kernel_bandwidth_weights()" << map_uid << std::endl;
     WeightsResult rst;
 
     GdaGeojson *json_map = geojson_maps[map_uid];

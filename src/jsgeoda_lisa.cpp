@@ -92,7 +92,7 @@ LisaResult local_gstar(const std::string map_uid, const std::string weight_uid, 
             for (size_t i=0; i<undefs.size(); ++i) {
                 undefs_b[i] = undefs[i] == 0 ? false : true;
             }
-            LISA* lisa = gda_localg(w, vals, undefs_b, significance_cutoff, nCPUs, permutations,
+            LISA* lisa = gda_localgstar(w, vals, undefs_b, significance_cutoff, nCPUs, permutations,
                                     permutation_method, last_seed_used);
             set_lisa_content(lisa, rst);
             delete lisa;

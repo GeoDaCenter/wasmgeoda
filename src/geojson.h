@@ -86,10 +86,14 @@ public:
 
     std::vector<double> GetBounds();
 
+    std::vector<std::string> GetColNames() {return data_colnames;}
+
 protected:
     std::string file_path;
 
     gda::MainMap main_map;
+
+    std::vector<std::string> data_colnames;
 
     std::map<std::string, std::vector<double> > data_numeric;
 
