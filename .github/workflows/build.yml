@@ -30,7 +30,7 @@ jobs:
 
       # with: emscripten-version: '1.38.47'
       - name: Setup Emscripten
-        uses: lovasoa/setup-emscripten@master
+        uses: mymindstorm/setup-emsdk@v10
 
       # Build wasmgeoda
       - name: Build wasmgeoda
