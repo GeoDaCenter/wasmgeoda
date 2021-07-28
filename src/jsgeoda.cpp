@@ -49,8 +49,7 @@ void free_geojsonmap()
  * 			all jsgeoda APIs. e.g. queen_weights(map_uid)
  * 
  */
-//void new_geojsonmap(const char* file_name, uint8_t* in, size_t len) {
-void new_geojsonmap(std::string file_name, const uint8* in, const size_t & len) {
+void new_geojsonmap(std::string file_name, const uint8_t* in, const size_t & len) {
     //We get out pointer as a plain int from javascript
     //We use a reinterpret_cast to turn our plain int into a uint8_t pointer. After
     //which we can play with the data just like we would normally.
