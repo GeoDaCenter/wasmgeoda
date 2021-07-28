@@ -30,7 +30,7 @@ jobs:
 
       # with: emscripten-version: '1.38.47'
       - name: Setup Emscripten
-        uses: lovasoa/setup-emscripten@latest
+        uses: lovasoa/setup-emscripten@master
 
       # Build wasmgeoda
       - name: Build wasmgeoda
