@@ -50,13 +50,16 @@ void free_geojsonmap()
  * 
  */
 //void new_geojsonmap(const char* file_name, uint8_t* in, size_t len) {
-void new_geojsonmap(std::string file_name, const int & in, const size_t & len) {
+void new_geojsonmap(std::string file_name, const uint8* in, const size_t & len) {
     //We get out pointer as a plain int from javascript
     //We use a reinterpret_cast to turn our plain int into a uint8_t pointer. After
     //which we can play with the data just like we would normally.
-    char* _in = reinterpret_cast<char*>(in);
+    //char* _in = reinterpret_cast<char*>(in);
     char* data = (char*)malloc(sizeof(char) * (len+1));
-    memcpy(data, _in, len);
+    //memcpy(data, _in, len);
+    for (size_t i=0; i<len; ++i) {
+        data[i] = in[i];
+    }
     data[len] = '\0';
 
     // store globally, has to be release by calling free_geojsonmap()
