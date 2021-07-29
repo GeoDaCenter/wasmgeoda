@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.12)
 project(${project} VERSION "0.0.6")
 
 # process exported functions
-set(exports _print_json)
+set(exports _new_geojsonmap)
 set(exports_string "")
 list(JOIN exports "," exports_string)
 
@@ -13,12 +13,11 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(TARGET_NAME ${project})
-message("MY_VARIABLE evaluates to ${TARGET_NAME}")
 
 # emcc version 1.39.0  (commit e047fe4c1ecfae6ba471ca43f2f630b79516706b)
-SET(CMAKE_C_COMPILER emcc)
-SET(CMAKE_CPP_COMPILER em++)
-SET(CMAKE_CXX_COMPILER em++)
+set(CMAKE_C_COMPILER emcc)
+set(CMAKE_CPP_COMPILER em++)
+set(CMAKE_CXX_COMPILER em++)
 
 #set( CMAKE_CXX_FLAGS "-O3 -s TOTAL_MEMORY=1812070400 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=16 -s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
 #set( CMAKE_CXX_FLAGS "-s DISABLE_EXCEPTION_CATCHING=0 -s TOTAL_MEMORY=1812070400 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=8 -s USE_BOOST_HEADERS=1 -s BINARYEN_TRAP_MODE='clamp' --bind -s EXPORTED_FUNCTIONS=\"[${exports_string}]\" -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"  )
@@ -30,8 +29,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_FILESYSTEM=1 -s USE_BOOST_HEADERS=
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D MEMFS")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=6")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\"]'")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_FUNCTIONS=\"[${exports_string}]\"")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s BINARYEN_TRAP_MODE='clamp'")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_FUNCTIONS=\"[${exports_string}]\"")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s MODULARIZE=1")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --pre-js ${CMAKE_SOURCE_DIR}/src/pre.js")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORT_NAME='jsgeoda'")

@@ -24,7 +24,6 @@
 std::map<std::string, GdaGeojson*> geojson_maps;
 
 extern "C" {
-	//void print_json(char* content);
     void new_geojsonmap(const char* file_name, uint8_t* data, size_t len);
 }
 
@@ -342,11 +341,6 @@ int main() {
     //std::vector<std::vector<int> > clt = redcap("natregimes.geojson", r.uid, 4, col_names, "", -1,
     // "firstorder-singlelinkage");
     return 0;
-}
-
-void print_json(char* content) {
-	std::cout << "print_json" << std::endl;
-	std::cout << content << std::endl;
 }
 
 #endif
