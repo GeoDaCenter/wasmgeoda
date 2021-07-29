@@ -38,7 +38,33 @@ jobs:
           rm libgeoda_src
           git clone --recursive https://github.com/geodacenter/libgeoda libgeoda_src
           ./build.sh
-      
+
+      # Push jsgeoda.js to GeoDaCenter/jsgeoda/src
+      - name: Pushes jsgeoda.js
+        uses: dmnemec/copy_file_to_another_repo_action@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB_JSGEODA }}
+        with:
+          source_file: 'build/jsgeoda.js'
+          destination_repo: 'GeoDaCenter/jsgeoda'
+          destination_folder: 'src'
+          user_email: 'lixun910@email.com'
+          user_name: 'lixun910'
+          commit_message: 'Update jsgeoda.js' 
+
+      # Push jsgeoda.wasm to GeoDaCenter/jsgeoda/src
+      - name: Pushes jsgeoda.wasm
+        uses: dmnemec/copy_file_to_another_repo_action@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB_JSGEODA }}
+        with:
+          source_file: 'build/jsgeoda.wasm'
+          destination_repo: 'GeoDaCenter/jsgeoda'
+          destination_folder: 'src'
+          user_email: 'lixun910@email.com'
+          user_name: 'lixun910'
+          commit_message: 'Update jsgeoda.wasm' 
+
       # Upload artifact
       - uses: actions/upload-artifact@v2
         with:
