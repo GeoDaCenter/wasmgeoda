@@ -1,8 +1,7 @@
+mkdir -p build
 cd build
-cmake .. -DUSE_EMCC=True -DCMAKE_C_COMPILER=emcc -DCMAKE_CXX_COMPILER=em++ -DCMAKE_CPP_COMPILER=em++ -DCMAKE_CXX_STANDARD=14
-make jsgeoda.html
+emcmake cmake .. -DUSE_EMCC=True -DCMAKE_C_COMPILER=emcc -DCMAKE_CXX_COMPILER=em++ -DCMAKE_CPP_COMPILER=em++
+emmake make jsgeoda
+#cp jsgeoda.js ~/Github/jsgeoda/src/jsgeoda.js
+#cp jsgeoda.wasm ~/Github/jsgeoda/src/jsgeoda.wasm
 
-mv jsgeoda.js ../web/gen/
-mv jsgeoda.wasm ../web/gen/
-mv jsgeoda.worker.js ../web/gen/
-mv jsgeoda.html.mem ../web/gen/

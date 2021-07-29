@@ -36,5 +36,7 @@ build/
 src/cmake-build-debug
 .idea/
 cmake-build-debug/
+cmake-build-*/
 3rd_party/boost-1.70.0/
 *.swp
+.DS_Store

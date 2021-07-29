@@ -6,10 +6,11 @@
 #include <string>
 #include <rapidjson/document.h>
 
-#include "weights/GeodaWeight.h"
-#include "geofeature.h"
+#include "../libgeoda_src/weights/GeodaWeight.h"
+#include "../libgeoda_src/geofeature.h"
+#include "../libgeoda_src/gda_interface.h"
 
-class GdaGeojson
+class GdaGeojson : public AbstractGeoDa
 {
 public:
     // default constructor for std::vector and std::map
@@ -23,50 +24,57 @@ public:
 
     void Read(const char* file_name, const char* in_content);
 
-    int GetNumObs();
+    virtual int GetNumObs() const;
 
-    gda::ShapeType GetMapType();
+    virtual const std::vector<gda::PointContents*>& GetCentroids();
 
-    const std::vector<gda::Point>& GetCentroids();
+    virtual int GetMapType();
 
-    gda::MainMap& GetMainMap();
+    virtual std::string GetMapTypeName();
 
-    // data for test only
+    virtual gda::MainMap& GetMainMap();
+
     std::vector<double> GetNumericCol(std::string col_name);
 
-    // weights related functions:
-    GeoDaWeight* CreateQueenWeights(unsigned int order=1, 
-        bool include_lower_order = false,
- 	    double precision_threshold = 0);
+    std::vector<std::string> GetStringCol(std::string col_name);
 
-    GeoDaWeight* CreateRookWeights(unsigned int order=1, 
-        bool include_lower_order = false,
- 	    double precision_threshold = 0);
+    bool IsNumericCol(std::string col_name);
+
+    // weights related functions:
+    GeoDaWeight* CreateQueenWeights(unsigned int order,
+        bool include_lower_order,
+ 	    double precision_threshold);
+
+    GeoDaWeight* CreateRookWeights(unsigned int order,
+        bool include_lower_order,
+ 	    double precision_threshold);
 
     GeoDaWeight* CreateKnnWeights(unsigned int k,
-        double power = 1.0,
-        bool is_inverse = false,
-        bool is_arc = false,
-        bool is_mile = true);
+        double power,
+        bool is_inverse,
+        bool is_arc,
+        bool is_mile);
 
     GeoDaWeight* CreateDistanceWeights(double dist_thres,
-        double power = 1.0,
-        bool is_inverse = false,
-        bool is_arc = false,
-        bool is_mile = true);
+        double power,
+        bool is_inverse,
+        bool is_arc,
+        bool is_mile);
 
-    GeoDaWeight* CreateKernelWeights(unsigned int k,
+    GeoDaWeight* CreateKernelKnnWeights(unsigned int k,
         const std::string& kernel,
-        bool adaptive_bandwidth = false,
-        bool use_kernel_diagonals = false,
-        bool is_arc = false,
-        bool is_mile = true);
+        bool adaptive_bandwidth,
+        bool use_kernel_diagonals,
+        double power, bool is_inverse,
+        bool is_arc,
+        bool is_mile);
 
     GeoDaWeight* CreateKernelWeights(double dist_thres,
         const std::string& kernel,
-        bool use_kernel_diagonals = false,
-        bool is_arc = false,
-        bool is_mile = true);
+        bool use_kernel_diagonals,
+        double power, bool is_inverse,
+        bool is_arc,
+        bool is_mile);
 
     GeoDaWeight* GetWeights(const std::string& w_uid) {
         return weights_dict[w_uid];
@@ -74,8 +82,18 @@ public:
 
     double GetMinDistanceThreshold(bool is_arc, bool is_mile);
 
+    std::string GetFilePath() const { return file_path; }
+
+    std::vector<double> GetBounds();
+
+    std::vector<std::string> GetColNames() {return data_colnames;}
+
 protected:
+    std::string file_path;
+
     gda::MainMap main_map;
+
+    std::vector<std::string> data_colnames;
 
     std::map<std::string, std::vector<double> > data_numeric;
 
@@ -83,7 +101,7 @@ protected:
 
     std::map<std::string, GeoDaWeight*> weights_dict;
 
-    std::vector<gda::Point> centroids;
+    std::vector<gda::PointContents*> centroids;
 
     // read geojson related functions:
     void init();

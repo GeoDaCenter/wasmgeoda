@@ -4,8 +4,8 @@
 #include <limits>
 #include <boost/algorithm/string.hpp>
 
-#include "shape/centroid.h"
-#include "gda_weights.h"
+#include "../libgeoda_src/shape/centroid.h"
+#include "../libgeoda_src/gda_weights.h"
 #include "geojson.h"
 
 using error = std::runtime_error;
@@ -19,6 +19,7 @@ GdaGeojson::GdaGeojson(const std::string& file_path)
         : GdaGeojson()
 {
 #ifndef __JSGEODA__
+    this->file_path = file_path;
     std::string filename = file_path.substr(file_path.find_last_of("/") + 1);
 
     FILE *fp;
@@ -51,6 +52,7 @@ GdaGeojson::GdaGeojson(const std::string& file_path)
 GdaGeojson::GdaGeojson(const char* file_name, const char* in_content)
 : GdaGeojson()
 {
+    this->file_path = file_name;
     this->Read(file_name, in_content);
 }
 
@@ -62,6 +64,22 @@ GdaGeojson::~GdaGeojson()
         delete it->second;
     }
     weights_dict.clear();
+
+    for (size_t i=0; i<centroids.size(); ++i) {
+        if (centroids[i]) {
+            delete centroids[i];
+        }
+    }
+}
+
+std::vector<double> GdaGeojson::GetBounds()
+{
+    std::vector<double> bounds;
+    bounds.push_back(this->main_map.bbox_x_min);
+    bounds.push_back(this->main_map.bbox_x_max);
+    bounds.push_back(this->main_map.bbox_y_min);
+    bounds.push_back(this->main_map.bbox_y_max);
+    return bounds;
 }
 
 gda::MainMap& GdaGeojson::GetMainMap()
@@ -69,32 +87,49 @@ gda::MainMap& GdaGeojson::GetMainMap()
     return this->main_map;
 }
 
-int GdaGeojson::GetNumObs()
+int GdaGeojson::GetNumObs() const
 {
     return this->main_map.num_obs;
 }
 
-gda::ShapeType GdaGeojson::GetMapType()
+int GdaGeojson::GetMapType()
 {
     return this->main_map.shape_type;
 }
 
-const std::vector<gda::Point>& GdaGeojson::GetCentroids()
+std::string GdaGeojson::GetMapTypeName()
+{
+    if (main_map.shape_type == gda::POLYGON || main_map.shape_type == gda::POLYGON_Z ||
+        main_map.shape_type == gda::POLYGON_M) {
+        return "Polygon";
+    } else if (main_map.shape_type == gda::POINT_TYP || main_map.shape_type == gda::MULTI_POINT ||
+               main_map.shape_type == gda::POINT_Z || main_map.shape_type == gda::POINT_M ||
+               main_map.shape_type == gda::MULTI_POINT_Z) {
+        return "Point";
+    } else if (main_map.shape_type == gda::POLY_LINE || main_map.shape_type == gda::POLY_LINE_Z ||
+               main_map.shape_type == gda::POLY_LINE_M ) {
+        return "Line";
+    } else {
+        return "Unknown";
+    }
+}
+
+const std::vector<gda::PointContents*>& GdaGeojson::GetCentroids()
 {
     if (this->centroids.empty()) {
         if (this->main_map.shape_type == gda::POINT_TYP) {
             this->centroids.resize(this->main_map.num_obs);
             for (size_t i=0; i<this->centroids.size(); ++i) {
                 gda::PointContents* pt = (gda::PointContents*)this->main_map.records[i];
-                this->centroids[i].x = pt->x;
-                this->centroids[i].y = pt->y;
+                this->centroids[i] = pt;
             }
         } else if (this->main_map.shape_type == gda::POLYGON) {
             this->centroids.resize(this->main_map.num_obs);
             for (size_t i=0; i<this->centroids.size(); ++i) {
                 gda::PolygonContents* poly = (gda::PolygonContents*)this->main_map.records[i];
                 Centroid cent(poly);
-                cent.getCentroid(this->centroids[i]);
+                this->centroids[i] = new gda::PointContents;
+                cent.getCentroid(*this->centroids[i]);
             }
         }
     }
@@ -104,7 +139,7 @@ const std::vector<gda::Point>& GdaGeojson::GetCentroids()
 
 double GdaGeojson::GetMinDistanceThreshold(bool is_arc, bool is_mile)
 {
-    return gda_min_distthreshold(this, is_arc, is_mile);
+    return gda_min_distthreshold((AbstractGeoDa*)this, is_arc, is_mile);
 }
 
 GeoDaWeight* GdaGeojson::CreateQueenWeights(unsigned int order, 
@@ -113,15 +148,19 @@ GeoDaWeight* GdaGeojson::CreateQueenWeights(unsigned int order,
 {
     std::stringstream w_uid;
     w_uid << "w_queen";
+    w_uid << this->file_path;
     w_uid << order;
     w_uid << include_lower_order;
     w_uid << precision_threshold;
     std::string w_uid_str = w_uid.str();
     GeoDaWeight* w = 0;
+
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
+        //std::cout << "GdaGeojson::CreateQueenWeights() direct return:" << w_uid_str << std::endl;
         w = this->weights_dict[w_uid.str()];
     } else {
-        w = gda_queen_weights(this, order, include_lower_order, precision_threshold);
+        //std::cout << "GdaGeojson::CreateQueenWeights()" << std::endl;
+        w = gda_queen_weights((AbstractGeoDa*)this, order, include_lower_order, precision_threshold);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
@@ -134,6 +173,7 @@ GeoDaWeight* GdaGeojson::CreateRookWeights(unsigned int order,
 {
     std::stringstream w_uid;
     w_uid << "w_rook";
+    w_uid << this->file_path;
     w_uid << order;
     w_uid << include_lower_order;
     w_uid << precision_threshold;
@@ -142,7 +182,7 @@ GeoDaWeight* GdaGeojson::CreateRookWeights(unsigned int order,
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        w = gda_rook_weights(this, order, include_lower_order, precision_threshold);
+        w = gda_rook_weights((AbstractGeoDa*)this, order, include_lower_order, precision_threshold);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
@@ -150,25 +190,34 @@ GeoDaWeight* GdaGeojson::CreateRookWeights(unsigned int order,
 }
 
 GeoDaWeight* GdaGeojson::CreateKnnWeights(unsigned int k,
-                              double power,
-                              bool is_inverse,
-                              bool is_arc,
-                              bool is_mile)
+                                          double power,
+                                          bool is_inverse,
+                                          bool is_arc,
+                                          bool is_mile)
 {
     std::stringstream w_uid;
     w_uid << "w_knn";
+    w_uid << this->file_path;
     w_uid << k;
     w_uid << power;
     w_uid << is_inverse;
     w_uid << is_arc;
     w_uid << is_mile;
     std::string w_uid_str = w_uid.str();
-    std::cout << "CreateKnnWeights()" << w_uid_str << std::endl;
+    //std::cout << "CreateKnnWeights()" << w_uid_str << std::endl;
+
+    std::string kernel = "";
+    double bandwidth = 0.0;
+    bool adaptive_bandwidth = false;
+    bool use_kernel_diagonals = false;
+    std::string polyid = "";
+
     GeoDaWeight* w = 0;
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        w = gda_knn_weights(this, k, power, is_inverse, is_arc, is_mile);
+        w = gda_knn_weights((AbstractGeoDa*)this, k, power, is_inverse, is_arc, is_mile, kernel, bandwidth,
+                adaptive_bandwidth, use_kernel_diagonals, polyid);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
@@ -183,17 +232,23 @@ GeoDaWeight* GdaGeojson::CreateDistanceWeights(double dist_thres,
 {
     std::stringstream w_uid;
     w_uid << "w_dist";
+    w_uid << this->file_path;
     w_uid << dist_thres;
     w_uid << power;
     w_uid << is_inverse;
     w_uid << is_arc;
     w_uid << is_mile;
     std::string w_uid_str = w_uid.str();
+
+    std::string kernel = "";
+    bool use_kernel_diagonals = false;
+
     GeoDaWeight* w = 0;
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        w = gda_distance_weights(this, dist_thres, "", power, is_inverse, is_arc, is_mile);
+        w = gda_distance_weights((AbstractGeoDa*)this, dist_thres, "", power, is_inverse, is_arc, is_mile, kernel,
+                use_kernel_diagonals);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
@@ -203,35 +258,43 @@ GeoDaWeight* GdaGeojson::CreateDistanceWeights(double dist_thres,
 GeoDaWeight* GdaGeojson::CreateKernelWeights(double dist_thres,
                                              const std::string& kernel,
                                              bool use_kernel_diagonals,
+                                             double power, bool is_inverse,
                                              bool is_arc, bool is_mile)
 {
     std::stringstream w_uid;
     w_uid << "w_kernel";
+    w_uid << this->file_path;
     w_uid << dist_thres;
     w_uid << kernel;
     w_uid << use_kernel_diagonals;
     w_uid << is_arc;
     w_uid << is_mile;
     std::string w_uid_str = w_uid.str();
+
+    std::string polyid = "";
+
     GeoDaWeight* w = 0;
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        w = gda_distance_weights(this, dist_thres, "", 1.0, false, is_arc, is_mile, kernel, use_kernel_diagonals);
+        w = gda_distance_weights((AbstractGeoDa*)this, dist_thres, polyid, power, is_inverse, is_arc, is_mile, kernel,
+                use_kernel_diagonals);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
     return w;
 }
 
-GeoDaWeight* GdaGeojson::CreateKernelWeights(unsigned int k,
-                                             const std::string& kernel,
-                                             bool adaptive_bandwidth,
-                                             bool use_kernel_diagonals,
-                                             bool is_arc, bool is_mile)
+GeoDaWeight* GdaGeojson::CreateKernelKnnWeights(unsigned int k,
+                                                const std::string& kernel,
+                                                bool adaptive_bandwidth,
+                                                bool use_kernel_diagonals,
+                                                double power, bool is_inverse,
+                                                bool is_arc, bool is_mile)
 {
     std::stringstream w_uid;
-    w_uid << "w_kernel";
+    w_uid << "w_kernel_knn";
+    w_uid << this->file_path;
     w_uid << k;
     w_uid << kernel;
     w_uid << adaptive_bandwidth;
@@ -239,11 +302,16 @@ GeoDaWeight* GdaGeojson::CreateKernelWeights(unsigned int k,
     w_uid << is_arc;
     w_uid << is_mile;
     std::string w_uid_str = w_uid.str();
+
+    double bandwidth = 0.0;
+    std::string polyid = "";
+
     GeoDaWeight* w = 0;
     if (this->weights_dict.find(w_uid_str) != this->weights_dict.end()) {
         w = this->weights_dict[w_uid.str()];
     } else {
-        w = gda_knn_weights(this, k, 1.0, false, is_arc, is_mile, kernel, 0.0, adaptive_bandwidth, use_kernel_diagonals);
+        w = gda_knn_weights((AbstractGeoDa*)this, k, power, is_inverse, is_arc, is_mile, kernel, bandwidth,
+                adaptive_bandwidth, use_kernel_diagonals, polyid);
         w->uid = w_uid_str;
         this->weights_dict[w_uid.str()] = w;
     }
@@ -253,34 +321,58 @@ GeoDaWeight* GdaGeojson::CreateKernelWeights(unsigned int k,
 std::vector<double> GdaGeojson::GetNumericCol(std::string col_name)
 {
     if (data_numeric.find(col_name) == data_numeric.end()) {
-        std::cout << "not found col" <<std::endl;
+        std::cout << col_name << " not found" <<std::endl;
         return std::vector<double>();
     }
     return data_numeric[col_name];
 }
 
 
+std::vector<std::string> GdaGeojson::GetStringCol(std::string col_name)
+{
+    if (data_string.find(col_name) == data_string.end()) {
+        std::cout << col_name << " not found" <<std::endl;
+        return std::vector<std::string>();
+    }
+    return data_string[col_name];
+}
+
+bool GdaGeojson::IsNumericCol(std::string col_name)
+{
+    return data_numeric.find(col_name) != data_numeric.end();
+}
+
 void GdaGeojson::Read(const char* file_name, const char* in_content)
 {
+    std::string tmp;
+    tmp = file_name;
+    //std::cout <<"GdaGeojson::Read()" << tmp << in_content << std::endl;
     rapidjson::Document json;
     json.Parse(in_content);
 
-    if (!json.IsObject())
+
+    if (!json.IsObject()) {
+        std::cout <<"Geometry must be an object"<< std::endl;
         throw error("Geometry must be an object");
+    }
 
     const auto &json_end = json.MemberEnd();
 
     const auto &features_itr = json.FindMember("features");
-    if (features_itr == json_end)
+    if (features_itr == json_end) {
+        std::cout <<"Content of features not found"<< std::endl;
         throw error("Content of features not found");
+    }
 
     const auto &features = features_itr->value;
 
+    //std::cout <<"GdaGeojson::readFeatureCollection()"<< std::endl;
     this->readFeatureCollection(features);
 }
 
 void GdaGeojson::readFeatureCollection(const rapidjson::Value& features)
 {
+    //std::cout <<"GdaGeojson::readFeatureCollection()"<< std::endl;
     /*
     {
         "type": "Feature",
@@ -302,6 +394,9 @@ void GdaGeojson::readFeatureCollection(const rapidjson::Value& features)
 
     const auto &fa = features.GetArray();
     this->main_map.num_obs = fa.Size();
+
+    //std::cout <<"GdaGeojson::readFeatureCollection(): n="<< fa.Size() << std::endl;
+
     for (size_t i=0; i<fa.Size(); ++i) {
         const rapidjson::Value &geom = fa[i]["geometry"];
         //std::cout << fa[i]["properties"]["POLY_ID"].GetInt() <<std::endl;
@@ -316,6 +411,7 @@ void GdaGeojson::readFeatureCollection(const rapidjson::Value& features)
             } else {
                 data_string[var_name].push_back(iter->value.GetString());
             }
+            data_colnames.push_back(var_name);
         }
 
         // get geometry
@@ -326,6 +422,7 @@ void GdaGeojson::readFeatureCollection(const rapidjson::Value& features)
             this->createGeometryFeature(i, geom);
         }
     }
+    //std::cout <<"GdaGeojson::readFeatureCollection(): done"<< std::endl;
 }
 
 void GdaGeojson::createGeometryFeature(size_t i, const rapidjson::Value& geom)
