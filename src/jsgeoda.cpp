@@ -23,10 +23,10 @@
 
 std::map<std::string, GdaGeojson*> geojson_maps;
 
-//extern "C" {
+extern "C" {
 	//void print_json(char* content);
-    //void new_geojsonmap(const char* file_name, uint8_t* data, size_t len);
-//}
+    void new_geojsonmap(const char* file_name, uint8_t* data, size_t len);
+}
 
 void free_geojsonmap()
 {
@@ -49,9 +49,8 @@ void free_geojsonmap()
  * 			all jsgeoda APIs. e.g. queen_weights(map_uid)
  * 
  */
-//void new_geojsonmap(const char* file_name, uint8_t* in, size_t len) {
-void new_geojsonmap(std::string file_name, const char& in, const size_t & len) 
-{
+void new_geojsonmap(const char* file_name, uint8_t* in, size_t len) {
+//void new_geojsonmap(std::string file_name, int& in, const size_t & len) {
     //We get out pointer as a plain int from javascript
     //We use a reinterpret_cast to turn our plain int into a uint8_t pointer. After
     //which we can play with the data just like we would normally.
@@ -64,7 +63,7 @@ void new_geojsonmap(std::string file_name, const char& in, const size_t & len)
     data[len] = '\0';
 
     // store globally, has to be release by calling free_geojsonmap()
-    GdaGeojson *json_map = new GdaGeojson(file_name.c_str(), data);
+    GdaGeojson *json_map = new GdaGeojson(file_name, data);
     geojson_maps[std::string(file_name)] = json_map;
     free(data);
 }
@@ -271,7 +270,7 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
         .function("ratio", &ClusteringResult::get_ratio)
         ;
 
-    emscripten::function("new_geojsonmap", &new_geojsonmap);
+    //emscripten::function("new_geojsonmap", &new_geojsonmap);
     emscripten::function("free_geojsonmap", &free_geojsonmap);
 
     emscripten::function("get_bounds", &get_bounds);
