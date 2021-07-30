@@ -42,7 +42,6 @@ jobs:
       # Push jsgeoda.js to GeoDaCenter/jsgeoda/src
       - name: Pushes jsgeoda.js
         if: startsWith(github.ref, 'refs/tags/v')
-        destination_branch: 'master'
         uses: dmnemec/copy_file_to_another_repo_action@main
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB_JSGEODA }}
@@ -58,7 +57,6 @@ jobs:
       # Push jsgeoda.wasm to GeoDaCenter/jsgeoda/src
       - name: Pushes jsgeoda.wasm
         if: startsWith(github.ref, 'refs/tags/v')
-        destination_branch: 'master'
         uses: dmnemec/copy_file_to_another_repo_action@main
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB_JSGEODA }}
