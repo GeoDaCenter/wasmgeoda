@@ -54,10 +54,11 @@ struct WeightsResult {
     std::string get_map_uid() { return map_uid;}
 };
 
+std::vector<int> spatial_count(const std::string map_uid, const std::string aggregate_map_uid);
+
 /**
  *  Functions of weights
  */
-
 
 void set_weights_content(GeoDaWeight* w, const string& map_uid, WeightsResult& rst);
 

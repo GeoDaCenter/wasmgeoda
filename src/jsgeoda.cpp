@@ -9,7 +9,13 @@
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
+
 #include <boost/algorithm/string.hpp>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
+#include <boost/geometry/geometries/multi_polygon.hpp>
 
 #include "../libgeoda_src/clustering/DorlingCartogram.h"
 #include "../libgeoda_src/weights/GalWeight.h"
@@ -22,6 +28,19 @@
 #include "jsgeoda.h"
 
 std::map<std::string, GdaGeojson*> geojson_maps;
+
+namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
+typedef bg::model::point<double, 2, bg::cs::cartesian> pt_2d;
+typedef bg::model::box<pt_2d> box_2d;
+typedef std::pair<pt_2d, unsigned> pt_2d_val;
+typedef std::pair<box_2d, unsigned> box_2d_val;
+typedef bgi::rtree< box_2d_val, bgi::quadratic<16> > rtree_box_2d_t;
+typedef bgi::rtree< pt_2d_val, bgi::quadratic<16> > rtree_pt_2d_t;
+
+typedef boost::geometry::model::d2::point_xy<double> point_type;
+typedef boost::geometry::model::polygon<point_type> polygon_type;
+typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
 
 extern "C" {
     void new_geojsonmap(const char* file_name, uint8_t* data, size_t len);
@@ -158,7 +177,63 @@ bool is_numeric_col(std::string map_uid, std::string col_name) {
     return false;
 }
 
+std::vector<int> spatial_count(const std::string map_uid, const std::string aggregate_map_uid)
+{
+    std::vector<int> counts;
+    GdaGeojson *map = geojson_maps[map_uid];
+    GdaGeojson *aggregate_map = geojson_maps[aggregate_map_uid];
+    if (map && aggregate_map) {
+        // using selected layer (points) to create rtree
+        rtree_pt_2d_t rtree_bbox;
+        gda::MainMap& mm = map->GetMainMap();
+        int num_obs = mm.num_obs;
+        for (int i =0; i < num_obs; ++i) {
+            gda::GeometryContent* geom = mm.records[i];
+            gda::PointContents* pc = (gda::PointContents*)geom;
+            rtree_bbox.insert(std::make_pair(pt_2d(pc->x, pc->y), i));
+        }
+        // query points in polygons
+        gda::MainMap& polys = aggregate_map->GetMainMap();
+        num_obs = polys.num_obs;
+        counts.resize(num_obs, 0);
+        for (int i =0; i < num_obs; ++i) {
+            gda::GeometryContent *geom = polys.records[i];
+            gda::PolygonContents *pc = (gda::PolygonContents *) geom;
 
+            multi_polygon_type multi_poly;
+            for (int p = 0; p < pc->num_parts; ++p) {
+                polygon_type poly;
+                int start = pc->parts[p];
+                int end = p < pc->num_parts - 1 ? pc->parts[p+1] : pc->num_points;
+                if (!pc->holes[p]) {
+                    for(int j = start; j < end; ++j) {
+                        double x = pc->points[j].x;
+                        double y = pc->points[j].y;
+                        bg::append(poly, bg::model::d2::point_xy<double>(x, y));
+                    }
+                }
+                multi_poly.push_back(poly);
+            }
+
+            // query points in this box
+            box_2d b(pt_2d(pc->box[0], pc->box[1]), pt_2d(pc->box[2], pc->box[3]));
+            std::vector<pt_2d_val> q;
+            rtree_bbox.query(bgi::within(b), std::back_inserter(q));
+            for (int j=0; j<q.size(); j++) {
+                const pt_2d_val& v = q[j];
+                int pt_idx = v.second;
+                double x = v.first.get<0>();
+                double y = v.first.get<1>();
+
+                point_type p(x, y);
+                if (boost::geometry::within(p, multi_poly)) {
+                    counts[i] += 1;
+                }
+            }
+        }
+    }
+    return counts;
+}
 
 std::vector<int> get_neighbors(const std::string map_uid, const std::string weight_uid, int id)
 {
@@ -325,6 +400,7 @@ EMSCRIPTEN_BINDINGS(wasmgeoda) {
     emscripten::function("cartogram", &cartogram);
     emscripten::function("get_centroids", &get_centroids);
     emscripten::function("get_neighbors", &get_neighbors);
+    emscripten::function("spatial_count", &spatial_count);
 }
 
 # else
