@@ -24,7 +24,7 @@ ClusteringResult redcap(const std::string map_uid, const std::string weight_uid,
             int nCPUs = 1;
             int seed = 123456789;// not used
             std::vector<std::vector<int> > cluster_ids = gda_redcap(k, w, data, scale_method, method, distance_method,
-                                                                    bound_vals, min_bound, seed, nCPUs);
+                                                                    bound_vals, min_bound, seed, nCPUs, NULL);
 
             rst.is_valid = true;
             rst.between_ss = gda_betweensumofsquare(cluster_ids, data);
@@ -50,7 +50,7 @@ ClusteringResult schc(const std::string map_uid, const std::string weight_uid, i
         GeoDaWeight *w = json_map->GetWeights(weight_uid);
         if (w) {
             std::vector<std::vector<int> > cluster_ids = gda_schc(k, w, data, scale_method, method, distance_method,
-                                                                  bound_vals, min_bound);
+                                                                  bound_vals, min_bound, NULL);
 
             rst.is_valid = true;
             rst.between_ss = gda_betweensumofsquare(cluster_ids, data);
@@ -90,7 +90,7 @@ ClusteringResult azp_greedy(const std::string map_uid, const std::string weight_
 
             std::vector<std::vector<int> > cluster_ids = gda_azp_greedy(k, w, data, scale_method, inits,
                                                                         in_min_bounds, in_max_bounds, init_regions,
-                                                                        distance_method, seed);
+                                                                        distance_method, seed, NULL);
 
             rst.is_valid = true;
             rst.between_ss = gda_betweensumofsquare(cluster_ids, data);
@@ -130,7 +130,7 @@ ClusteringResult azp_sa(const std::string map_uid, const std::string weight_uid,
 
             std::vector<std::vector<int> > cluster_ids = gda_azp_sa(k, w, data, scale_method, inits, cooling_rate, sa_maxit,
                                                                     in_min_bounds, in_max_bounds, init_regions,
-                                                                    distance_method, seed);
+                                                                    distance_method, seed, NULL);
 
             rst.is_valid = true;
             rst.between_ss = gda_betweensumofsquare(cluster_ids, data);
@@ -170,7 +170,7 @@ ClusteringResult azp_tabu(const std::string map_uid, const std::string weight_ui
 
             std::vector<std::vector<int> > cluster_ids = gda_azp_tabu(k, w, data, scale_method, inits, tabu_length, conv_tabu,
                                                                       in_min_bounds, in_max_bounds, init_regions,
-                                                                      distance_method, seed);
+                                                                      distance_method, seed, NULL);
 
             rst.is_valid = true;
             rst.between_ss = gda_betweensumofsquare(cluster_ids, data);
@@ -210,7 +210,7 @@ ClusteringResult maxp_greedy(const std::string map_uid, const std::string weight
             std::vector<int> init_regions;
             std::vector<std::vector<int> > cluster_ids = gda_maxp_greedy(w, data, scale_method, iterations,
                                                                       in_min_bounds, in_max_bounds, init_regions,
-                                                                      distance_method, seed, 1);
+                                                                      distance_method, seed, 1, NULL);
 
             rst.is_valid = true;
             rst.between_ss = gda_betweensumofsquare(cluster_ids, data);
@@ -250,7 +250,7 @@ ClusteringResult maxp_sa(const std::string map_uid, const std::string weight_uid
             std::vector<int> init_regions;
             std::vector<std::vector<int> > cluster_ids = gda_maxp_sa(w, data, scale_method, iterations, cooling_rate, sa_maxit,
                                                                          in_min_bounds, in_max_bounds, init_regions,
-                                                                         distance_method, seed, 1);
+                                                                         distance_method, seed, 1, NULL);
 
             rst.is_valid = true;
             rst.between_ss = gda_betweensumofsquare(cluster_ids, data);
@@ -290,7 +290,7 @@ ClusteringResult maxp_tabu(const std::string map_uid, const std::string weight_u
             std::vector<int> init_regions;
             std::vector<std::vector<int> > cluster_ids = gda_maxp_tabu(w, data, scale_method, iterations, tabu_length, conv_tabu,
                                                                      in_min_bounds, in_max_bounds, init_regions,
-                                                                     distance_method, seed, 1);
+                                                                     distance_method, seed, 1, NULL);
 
             rst.is_valid = true;
             rst.between_ss = gda_betweensumofsquare(cluster_ids, data);
